@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- REAL AdMob IDs. Used ONLY in the Play Store (release) build.
+         The test APK keeps Google's test ads, so you can play safely. -->
+    <string name="admob_app_id" translatable="false">ca-app-pub-6953490482625922~9605296691</string>
+    <string name="admob_rewarded_id" translatable="false">ca-app-pub-6953490482625922/1687278227</string>
+    <string name="admob_interstitial_id" translatable="false">ca-app-pub-6953490482625922/5119431787</string>
+</resources>
