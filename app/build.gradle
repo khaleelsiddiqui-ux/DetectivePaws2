@@ -1,0 +1,54 @@
+plugins {
+    id 'com.android.application'
+}
+
+// Signing key for Google Play uploads. These come from GitHub Secrets when built in the cloud
+// (see README). If they're missing, only the test (debug) APK is built.
+def keystoreFile = System.getenv("KEYSTORE_FILE")
+
+android {
+    namespace 'com.detectivepaws.game'
+    compileSdk 36
+
+    defaultConfig {
+        // ⚠️ Your app's unique ID on Google Play. Change "detectivepaws" to something unique
+        // (e.g. com.yourname.detectivepaws) BEFORE your first Play Store upload. It can never change afterwards.
+        applicationId "com.detectivepaws.game"
+        minSdk 24
+        targetSdk 36
+        // Each cloud build gets a higher version number automatically (Play Store requires this).
+        versionCode((System.getenv("GITHUB_RUN_NUMBER") ?: "1").toInteger())
+        versionName "1.0." + (System.getenv("GITHUB_RUN_NUMBER") ?: "0")
+    }
+
+    signingConfigs {
+        if (keystoreFile) {
+            release {
+                storeFile file(keystoreFile)
+                storePassword System.getenv("KEYSTORE_PASSWORD")
+                keyAlias System.getenv("KEY_ALIAS")
+                keyPassword System.getenv("KEY_PASSWORD")
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            if (keystoreFile) {
+                signingConfig signingConfigs.release
+            }
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'com.google.android.gms:play-services-ads:24.4.0'
+    implementation 'com.google.android.ump:user-messaging-platform:3.1.0'
+}

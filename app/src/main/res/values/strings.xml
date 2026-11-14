@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Detective Paws</string>
+
+    <!--
+      ===== YOUR ADMOB IDs (this is where your money comes from) =====
+      The IDs below are Google's official TEST IDs. They show sample ads and pay nothing.
+      When your AdMob account is ready, replace all three with your real IDs (see README, Part 3).
+      Never tap your own real ads: AdMob can close your account for it.
+    -->
+    <string name="admob_app_id" translatable="false">ca-app-pub-3940256099942544~3347511713</string>
+    <string name="admob_rewarded_id" translatable="false">ca-app-pub-3940256099942544/5224354917</string>
+    <string name="admob_interstitial_id" translatable="false">ca-app-pub-3940256099942544/1033173712</string>
+</resources>

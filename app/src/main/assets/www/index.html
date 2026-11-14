@@ -1,0 +1,2358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#2b2350">
+<title>Detective Paws</title>
+<style>
+  :root {
+    --ink: #2e2140;
+    --paper: #fff7ea;
+    --plum: #2b2350;
+    --plum-2: #3d3270;
+    --honey: #ffbf3c;
+    --mint: #3ccf9a;
+    --rose: #ff6f91;
+    --ad: #8a63ff;
+    --muted: #7a6a8a;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--plum); color: var(--ink);
+    font-family: "Trebuchet MS", "Arial Rounded MT Bold", system-ui, -apple-system, Roboto, sans-serif; touch-action: manipulation; }
+  canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+
+  .screen { position: fixed; inset: 0; display: none; flex-direction: column; align-items: center; z-index: 10;
+    padding: calc(env(safe-area-inset-top) + 20px) 16px calc(env(safe-area-inset-bottom) + 20px); text-align: center; }
+  .screen.show { display: flex; }
+  .center { justify-content: center; background: rgba(30, 20, 60, 0.45); }
+  #title { justify-content: space-between; }
+  .logo { margin-top: 22px; font-size: 54px; line-height: 0.88; font-weight: 900; color: var(--honey); letter-spacing: -1px;
+    -webkit-text-stroke: 5px var(--ink); paint-order: stroke; text-shadow: 0 6px 0 var(--ink); }
+  .logo span { display: block; color: #fff; font-size: 64px; }
+  .tag { margin-top: 12px; color: #e9ddff; font-weight: 800; font-size: 15px; }
+  .stack { width: 100%; max-width: 300px; display: flex; flex-direction: column; gap: 12px; }
+
+  .btn { width: 100%; border: 3px solid var(--ink); border-radius: 18px; padding: 13px 16px; font-size: 20px; font-weight: 900;
+    display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--ink); background: var(--paper);
+    box-shadow: 0 5px 0 var(--ink); transition: transform 0.06s, box-shadow 0.06s; font-family: inherit; }
+  .btn:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--ink); }
+  .btn.go { background: var(--mint); color: #fff; -webkit-text-stroke: 1.5px var(--ink); paint-order: stroke; font-size: 24px; }
+  .btn.ad { background: var(--ad); color: #fff; }
+  .btn.gold { background: var(--honey); }
+  .btn.rose { background: var(--rose); color: #fff; -webkit-text-stroke: 1.2px var(--ink); paint-order: stroke; }
+  .btn.small { font-size: 16px; padding: 10px 12px; }
+  .btn[disabled] { opacity: 0.45; }
+  .adtag { font-size: 11px; font-weight: 900; background: #fff; color: var(--ad); padding: 2px 6px; border-radius: 6px; -webkit-text-stroke: 0; }
+  .row2 { display: flex; gap: 10px; width: 100%; }
+
+  .pill { display: inline-flex; align-items: center; gap: 6px; background: var(--paper); border: 3px solid var(--ink);
+    padding: 4px 12px 4px 8px; border-radius: 999px; font-weight: 900; font-size: 17px; box-shadow: 0 3px 0 var(--ink); }
+  .coin { width: 18px; height: 18px; border-radius: 50%; flex: none; border: 2px solid var(--ink);
+    background: radial-gradient(circle at 35% 35%, #fff6c8, var(--honey) 50%, #d98a00); }
+  .toggles { display: flex; gap: 8px; justify-content: center; }
+  .tg.off { opacity: 0.38; text-decoration: line-through; }
+  .iconbtn { width: 44px; height: 44px; border-radius: 14px; border: 3px solid var(--ink); background: var(--paper);
+    font-size: 19px; display: grid; place-items: center; box-shadow: 0 3px 0 var(--ink); font-family: inherit; color: var(--ink); }
+
+  .panel { width: 100%; max-width: 350px; background: var(--paper); border: 4px solid var(--ink); border-radius: 26px;
+    padding: 18px 16px; box-shadow: 0 8px 0 var(--ink); display: flex; flex-direction: column; gap: 10px; max-height: 100%; min-height: 0; }
+  .panel h2 { margin: 0; font-size: 28px; font-weight: 900; }
+  .panel p { margin: 0; font-weight: 700; color: var(--muted); line-height: 1.35; }
+  .head { display: flex; justify-content: space-between; align-items: center; }
+
+  .cases { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; padding: 4px; min-height: 0; }
+  .case { display: flex; align-items: center; gap: 12px; text-align: left; border: 3px solid var(--ink); border-radius: 18px;
+    padding: 10px 12px; background: #fff; box-shadow: 0 3px 0 var(--ink); font-family: inherit; color: var(--ink); }
+  .case .num { width: 42px; height: 42px; border-radius: 12px; background: var(--plum-2); color: #fff; display: grid; place-items: center;
+    font-weight: 900; font-size: 20px; flex: none; border: 2px solid var(--ink); }
+  .case .info { flex: 1; min-width: 0; }
+  .case .t { font-weight: 900; font-size: 16px; }
+  .case .s { font-size: 13px; font-weight: 700; color: var(--muted); }
+  .case .stars { font-size: 16px; letter-spacing: 1px; color: #e0a400; white-space: nowrap; }
+  .case.locked { opacity: 0.55; }
+  .case.locked .num { background: #9a8fb0; }
+
+  .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; overflow-y: auto; padding: 4px; min-height: 0; }
+  .skin { border-radius: 18px; padding: 6px 6px 10px; background: #fff; border: 3px solid var(--ink); color: var(--ink); font-family: inherit;
+    display: flex; flex-direction: column; align-items: center; gap: 2px; box-shadow: 0 3px 0 var(--ink); }
+  .skin.on { background: #dcfff0; }
+  .skin canvas { position: static; width: 96px; height: 96px; }
+  .skin .nm { font-weight: 900; font-size: 15px; }
+  .skin .pr { font-size: 13px; font-weight: 800; display: flex; align-items: center; gap: 4px; color: var(--muted); }
+  .skin .pr .coin { width: 13px; height: 13px; border-width: 1.5px; }
+
+  /* dialogue */
+  #dialog { justify-content: flex-end; }
+  .bubble { width: 100%; max-width: 380px; background: var(--paper); border: 4px solid var(--ink); border-radius: 22px; padding: 16px 16px 14px;
+    box-shadow: 0 6px 0 var(--ink); text-align: left; position: relative; min-height: 118px; }
+  .speaker { position: absolute; top: -18px; left: 16px; background: var(--honey); border: 3px solid var(--ink); border-radius: 12px;
+    padding: 2px 12px; font-weight: 900; font-size: 15px; }
+  .speaker.client { background: var(--rose); color: #fff; }
+  .line { font-size: 19px; font-weight: 800; line-height: 1.35; min-height: 52px; }
+  .next { text-align: right; font-weight: 900; color: var(--muted); font-size: 13px; animation: blink 1s steps(2) infinite; }
+  @keyframes blink { 50% { opacity: 0.2; } }
+
+  /* lineup */
+  #lineup { justify-content: flex-end; pointer-events: none; }
+  #lineup .panel { pointer-events: auto; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+  .chip { font-size: 12px; font-weight: 800; background: #efe6ff; border: 2px solid var(--ink); border-radius: 999px; padding: 3px 9px; }
+  .alibi { font-size: 16px; font-weight: 800; color: var(--ink) !important; min-height: 44px; }
+  .who { font-size: 20px; font-weight: 900; }
+
+  .stars-big { font-size: 46px; letter-spacing: 4px; line-height: 1; }
+  .stars-big .off { opacity: 0.2; filter: grayscale(1); }
+  .reward { display: flex; justify-content: center; }
+
+  #adOverlay { position: fixed; inset: 0; background: #111; display: none; flex-direction: column; align-items: center;
+    justify-content: center; gap: 14px; z-index: 50; color: #ddd; }
+  #adOverlay.show { display: flex; }
+  .adbox { width: 80%; max-width: 300px; aspect-ratio: 9/14; border: 2px dashed rgba(255,255,255,0.3); border-radius: 18px;
+    display: grid; place-items: center; padding: 20px; font-size: 15px; line-height: 1.5; }
+  .bar { width: 80%; max-width: 300px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.15); overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 0; background: var(--ad); }
+
+  .toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 28px); transform: translateX(-50%) translateY(20px);
+    background: var(--ink); color: var(--paper); padding: 10px 16px; border-radius: 14px; font-weight: 800; opacity: 0; transition: 0.25s;
+    z-index: 60; pointer-events: none; white-space: nowrap; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  @media (prefers-reduced-motion: reduce) { .btn, .toast { transition: none; } .next { animation: none; } }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<!-- TITLE -->
+<div class="screen show" id="title">
+  <div>
+    <div class="logo">DETECTIVE<span>PAWS</span></div>
+    <div class="tag">50 cases. Find the clues. Catch the culprit.</div>
+    <div class="tag" style="opacity:.55;font-size:12px;margin-top:4px">Version 4 · painted edition</div>
+  </div>
+  <div class="stack">
+    <div style="display:flex; gap:10px; justify-content:center">
+      <div class="pill"><div class="coin"></div><span class="coinCount">0</span></div>
+      <div class="toggles"></div>
+    </div>
+    <button class="btn go" id="playBtn">Solve cases</button>
+    <button class="btn" id="shopBtn">🎩 Outfits</button>
+  </div>
+</div>
+
+<!-- CASE LIST -->
+<div class="screen center" id="cases">
+  <div class="panel">
+    <div class="head"><h2>Case Files</h2><div class="pill"><div class="coin"></div><span class="coinCount">0</span></div></div>
+    <div class="cases" id="caseList"></div>
+    <button class="btn small" id="casesBack">Back</button>
+  </div>
+</div>
+
+<!-- DIALOGUE -->
+<div class="screen" id="dialog">
+  <div class="bubble" id="bubble">
+    <div class="speaker" id="speaker">Detective Paws</div>
+    <div class="line" id="line"></div>
+    <div class="next">tap to continue ▸</div>
+  </div>
+</div>
+
+<!-- LINEUP -->
+<div class="screen" id="lineup">
+  <div class="panel">
+    <div class="who" id="whoName">Who did it?</div>
+    <p class="alibi" id="alibi">Tap a suspect to hear their story.</p>
+    <div class="chips" id="chips"></div>
+    <button class="btn rose" id="accuseBtn" disabled>👉 Accuse!</button>
+  </div>
+</div>
+
+<!-- SOLVED -->
+<div class="screen center" id="solved">
+  <div class="panel">
+    <h2>Case Closed!</h2>
+    <div class="stars-big" id="starRow"></div>
+    <p id="reveal"></p>
+    <div class="reward"><div class="pill"><div class="coin"></div>+<span id="earned">0</span></div></div>
+    <button class="btn gold" id="doubleBtn">×2 Coins <span class="adtag">AD</span></button>
+    <button class="btn go" id="nextBtn">Next case</button>
+    <button class="btn small" id="solvedCases">Case files</button>
+  </div>
+</div>
+
+<!-- TIME UP -->
+<div class="screen center" id="timeup">
+  <div class="panel">
+    <h2>Time's up!</h2>
+    <p>The trail went cold... but a good detective never gives up.</p>
+    <button class="btn ad" id="moreTimeBtn">+30 seconds <span class="adtag">AD</span></button>
+    <button class="btn go" id="retryBtn">Try again</button>
+    <button class="btn small" id="timeupCases">Case files</button>
+  </div>
+</div>
+
+<!-- PAUSE -->
+<div class="screen center" id="pause">
+  <div class="panel">
+    <h2>Paused</h2>
+    <div class="toggles"></div>
+    <button class="btn go" id="resumeBtn">Resume</button>
+    <button class="btn" id="quitBtn">Case files</button>
+  </div>
+</div>
+
+<!-- SHOP -->
+<div class="screen center" id="shop">
+  <div class="panel">
+    <div class="head"><h2>Outfits</h2><div class="pill"><div class="coin"></div><span class="coinCount">0</span></div></div>
+    <div class="grid" id="skinGrid"></div>
+    <button class="btn ad small" id="freeCoinsBtn">+40 Free Coins <span class="adtag">AD</span></button>
+    <button class="btn small" id="shopBack">Back</button>
+  </div>
+</div>
+
+<!-- Ad preview for the browser. In the Android app a real AdMob ad plays instead. -->
+<div id="adOverlay">
+  <div class="adbox">Ad preview<br><br>In the Android app, a real Google AdMob video ad plays here.</div>
+  <div class="bar"><i id="adBar"></i></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ================= SAVE =================
+  const SAVE_KEY = "detectivepaws_v1";
+  const defaults = { coins: 0, solved: {}, owned: ["classic"], skin: "classic", sound: true, music: true, voice: true, closed: 0 };
+  let save = Object.assign({}, defaults);
+  try { const raw = localStorage.getItem(SAVE_KEY); if (raw) save = Object.assign({}, defaults, JSON.parse(raw)); } catch (e) {}
+  function persist() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {} }
+
+  // ================= ADS =================
+  const Ads = {
+    _cb: null,
+    native: () => typeof window.AndroidAds !== "undefined",
+    rewarded(cb) { if (Ads._cb) return; Ads._cb = cb; Ads.native() ? window.AndroidAds.showRewarded() : fakeAd(2200); },
+    interstitial(cb) { if (Ads._cb) { cb(); return; } Ads._cb = () => cb(); Ads.native() ? window.AndroidAds.showInterstitial() : fakeAd(1200); },
+    _done(ok) { const cb = Ads._cb; Ads._cb = null; if (cb) cb(!!ok); },
+  };
+  window.Ads = Ads;
+  const adOverlay = document.getElementById("adOverlay"), adBar = document.getElementById("adBar");
+  function fakeAd(dur) {
+    adOverlay.classList.add("show"); adBar.style.transition = "none"; adBar.style.width = "0";
+    requestAnimationFrame(() => requestAnimationFrame(() => { adBar.style.transition = `width ${dur}ms linear`; adBar.style.width = "100%"; }));
+    setTimeout(() => { adOverlay.classList.remove("show"); Ads._done(true); }, dur + 100);
+  }
+
+  // ================= SOUND, MUSIC & VOICES =================
+  let actx = null, sfxBus = null, musicBus = null;
+  function audio() {
+    if (!actx) {
+      try {
+        actx = new (window.AudioContext || window.webkitAudioContext)();
+        sfxBus = actx.createGain(); sfxBus.gain.value = 1; sfxBus.connect(actx.destination);
+        musicBus = actx.createGain(); musicBus.gain.value = 0; musicBus.connect(actx.destination);
+      } catch (e) { return null; }
+      setTimeout(() => Music.fade(), 0);
+    }
+    if (actx.state === "suspended" && !document.hidden) actx.resume().catch(() => {});
+    return actx;
+  }
+  function tone(freq, dur, type, vol, slide, delay) {
+    if (!save.sound) return;
+    const a = audio(); if (!a) return;
+    try {
+      const o = a.createOscillator(), g = a.createGain(), now = a.currentTime + (delay || 0);
+      o.type = type || "sine"; o.frequency.setValueAtTime(freq, now);
+      if (slide) o.frequency.exponentialRampToValueAtTime(slide, now + dur);
+      g.gain.setValueAtTime(0.0001, a.currentTime); g.gain.setValueAtTime(vol || 0.1, now); g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+      o.connect(g); g.connect(sfxBus); o.start(now); o.stop(now + dur + 0.02);
+    } catch (e) {}
+  }
+  const sfx = {
+    found: () => { tone(660, 0.1, "triangle", 0.12); tone(990, 0.18, "triangle", 0.12, null, 0.08); },
+    miss: () => tone(220, 0.18, "square", 0.05, 160),
+    talk: () => tone(500 + Math.random() * 200, 0.05, "triangle", 0.04),
+    meow: () => tone(700, 0.3, "sawtooth", 0.06, 420),
+    win: () => [523, 659, 784, 1046].forEach((f, i) => tone(f, 0.22, "triangle", 0.12, null, i * 0.11)),
+    wrong: () => { tone(300, 0.15, "square", 0.06); tone(220, 0.25, "square", 0.06, null, 0.15); },
+    click: () => tone(800, 0.04, "sine", 0.05),
+    hint: () => tone(880, 0.4, "sine", 0.08, 1320),
+  };
+
+  // ---- Background music: tiny tracker. Each bar is 16 steps; "-" is a rest. ----
+  function noteHz(n) {
+    const m = /^([A-G])(#|b)?(\d)$/.exec(n);
+    const st = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }[m[1]] + (m[2] === "#" ? 1 : m[2] === "b" ? -1 : 0);
+    return 440 * Math.pow(2, (st + (+m[3] + 1) * 12 - 69) / 12);
+  }
+  const bars = list => list.map(b => b.trim().split(/\s+/).map(x => x === "-" ? 0 : noteHz(x)));
+  const TRACKS = {
+    // Sneaky detective theme (menus and case intros)
+    title: { bpm: 100, swing: 0.14, leadLen: 0.16, tick: 0,
+      bass: bars([
+        "A2 - C3 - E3 - A3 - G3 - E3 - C3 - E3 -",
+        "F2 - A2 - C3 - F3 - E3 - C3 - A2 - C3 -",
+        "D2 - F2 - A2 - D3 - C3 - A2 - F2 - A2 -",
+        "E2 - G#2 - B2 - E3 - D3 - B2 - G#2 - B2 -"]),
+      lead: bars([
+        "E5 - - D5 - - C5 - B4 - - - A4 - - -",
+        "- - - - C5 - A4 - F4 - - - E4 - - -",
+        "D5 - - C5 - - B4 - A4 - - - F4 - A4 -",
+        "G#4 - - - B4 - - - E5 - - - - - - -"]) },
+    // Playful searching music with a ticking clock
+    search: { bpm: 124, swing: 0, leadLen: 0.13, tick: 4,
+      bass: bars([
+        "C3 - - - G2 - - - C3 - - - G2 - E3 -",
+        "F2 - - - C3 - - - F2 - - - C3 - A2 -",
+        "G2 - - - D3 - - - G2 - - - D3 - B2 -",
+        "C3 - - - G2 - - - C3 - E3 - G3 - - -"]),
+      lead: bars([
+        "E5 - G5 - C6 - G5 - E5 - - - D5 - E5 -",
+        "F5 - A5 - C6 - A5 - F5 - - - E5 - C5 -",
+        "D5 - G5 - B5 - G5 - D5 - F5 - A5 - G5 -",
+        "E5 - C5 - G4 - C5 - E5 - G5 - C6 - - -"]) },
+    // Suspense for the suspect lineup
+    lineup: { bpm: 84, swing: 0, leadLen: 0.45, tick: 0,
+      bass: bars([
+        "D2 - - - - - D2 - D2 - - - - - - -",
+        "C#2 - - - - - C#2 - C#2 - - - - - - -",
+        "Bb1 - - - - - Bb1 - Bb1 - - - - - - -",
+        "A1 - - - - - A1 - A1 - - - A1 - A1 -"]),
+      lead: bars([
+        "- - - - A4 - Bb4 - A4 - - - - - - -",
+        "- - - - A4 - Bb4 - A4 - - - G4 - - -",
+        "- - - - F4 - G4 - F4 - - - - - - -",
+        "E4 - - - - - - - C#5 - - - - - - -"]) },
+  };
+  function mnote(freq, when, dur, wave, vol) {
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = wave; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, when); g.gain.linearRampToValueAtTime(vol, when + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+    o.connect(g); g.connect(musicBus); o.start(when); o.stop(when + dur + 0.05);
+  }
+  const Music = {
+    track: null, level: 1, step: 0, next: 0,
+    play(name) { this.track = name; this.step = 0; this.next = actx ? actx.currentTime + 0.08 : 0; this.fade(); },
+    stop() { this.track = null; this.fade(); },
+    setLevel(l) { this.level = l; this.fade(); },
+    fade() {
+      if (!actx) return;
+      const v = save.music && this.track ? 0.2 * this.level : 0;
+      musicBus.gain.setTargetAtTime(v, actx.currentTime, 0.3);
+    },
+    tick() {
+      if (!actx || !this.track || actx.state !== "running" || !save.music) return;
+      const tr = TRACKS[this.track], sp = 60 / tr.bpm / 4, len = tr.bass.length * 16;
+      if (this.next < actx.currentTime) this.next = actx.currentTime + 0.05;
+      while (this.next < actx.currentTime + 0.18) {
+        const n = this.step % len, b = Math.floor(n / 16), st = n % 16;
+        const when = this.next + (st % 2 ? tr.swing * sp : 0);
+        if (tr.bass[b][st]) mnote(tr.bass[b][st], when, 0.3, "triangle", 0.6);
+        if (tr.lead[b][st]) { mnote(tr.lead[b][st], when, tr.leadLen, "triangle", 0.42); mnote(tr.lead[b][st] * 2, when, tr.leadLen * 0.6, "sine", 0.08); }
+        if (tr.tick && st % tr.tick === 0) mnote(2600, when, 0.025, "sine", 0.1);
+        this.next += sp; this.step++;
+      }
+    },
+  };
+  setInterval(() => Music.tick(), 40);
+
+  // ---- Voices: phone text-to-speech in the app, the browser's voices in the preview ----
+  // [pitch, speed] for each character. 1 = normal.
+  const VOICES = {
+    narrator: [0.95, 0.95], detective: [1.05, 1.0], goose: [1.35, 1.0], benny: [1.6, 1.12], coco: [1.45, 1.08],
+    rocco: [0.8, 1.1], pip: [1.5, 1.18], pepper: [1.3, 1.15], hoot: [0.6, 0.85], olive: [0.85, 0.9], sage: [0.75, 0.88],
+    felix: [1.1, 1.05], ruby: [1.25, 1.05], bruno: [0.5, 0.85], polly: [0.7, 0.9], suki: [1.7, 1.28], nutmeg: [1.55, 1.22],
+    dottie: [1.45, 1.12], gus: [0.9, 1.0], milo: [2.0, 1.28], hazel: [1.8, 1.18], ziggy: [1.9, 1.2], lop: [1.15, 0.9],
+  };
+  // ---- Lip sync: the voice engine reports when each line starts, each word, and when it ends ----
+  const Talk = { id: null, who: null, text: "", rate: 1, t0: 0, ws: 0, we: 0, wt: 0, words: false, on: false };
+  const TypeTalk = { who: null, ch: "", active: false };
+  const pendingLines = {};
+  let lineUid = 0;
+  function wordEnd(text, a) { const m = /[\s,.!?;:]/.exec(text.slice(a)); return m ? a + m.index : text.length; }
+  window.__talk = function (ev, id, a, b) {
+    const now = performance.now() / 1000;
+    if (ev === "start") { const r = pendingLines[id]; if (!r) return; Object.assign(Talk, { id, who: r.who, text: r.text, rate: r.rate, t0: now, words: false, on: true, ever: true }); }
+    else if (ev === "word") { if (Talk.id !== id) return; Talk.ws = a; Talk.we = b > a ? b : wordEnd(Talk.text, a); Talk.wt = now; Talk.words = true; }
+    else if (ev === "done") { if (Talk.id === id) { Talk.on = false; Talk.who = null; } delete pendingLines[id]; }
+  };
+  function letterVis(ch) {
+    if (!ch) return "R"; ch = ch.toLowerCase();
+    if (ch === "a") return "A"; if ("eiy".includes(ch)) return "E"; if ("ouwq".includes(ch)) return "O";
+    if ("mbp".includes(ch)) return "M"; if ("fv".includes(ch)) return "F"; if (/[a-z0-9]/.test(ch)) return "C"; return "R";
+  }
+  // Which mouth shape a character on screen should show right now (null = not talking).
+  function visemeFor(key) {
+    if (save.voice && Talk.on && Talk.who === key) {
+      const now = performance.now() / 1000, per = 0.075 / Talk.rate;
+      if (Talk.words) {
+        const word = Talk.text.slice(Talk.ws, Talk.we), i = Math.floor((now - Talk.wt) / per);
+        if (i < word.length) return letterVis(word[i]);
+        return now - Talk.wt < word.length * per + 0.12 ? "M" : "R";
+      }
+      const i = Math.floor((now - Talk.t0) * 13 * Talk.rate);
+      return i < Talk.text.length ? letterVis(Talk.text[i]) : "R";
+    }
+    // No working voice (turned off or not installed): move the mouth with the typing text instead.
+    if (!(save.voice && Talk.ever) && TypeTalk.active && TypeTalk.who === key) return letterVis(TypeTalk.ch);
+    return null;
+  }
+  const Voice = {
+    clean(t) { return String(t).replace(/\*[^*]*\*/g, "").replace(/[“”"]/g, "").replace(/\.\.\./g, ", ").replace(/\s+/g, " ").trim().replace(/,$/, "."); },
+    say(text, who, queue) {
+      if (!save.voice) return;
+      const [pitch, rate] = VOICES[who] || VOICES.narrator, line = this.clean(text);
+      if (!line) return;
+      try {
+        const id = "u" + (++lineUid);
+        pendingLines[id] = { who, text: line, rate };
+        if (!queue) { Talk.on = false; Talk.who = null; }
+        if (window.AndroidVoice) { window.AndroidVoice.speak(line, pitch, rate, !!queue, id); return; }
+        const ss = window.speechSynthesis; if (!ss) return;
+        if (!queue) ss.cancel();
+        const u = new SpeechSynthesisUtterance(line);
+        u.pitch = pitch; u.rate = rate; u.lang = "en-US";
+        u.onstart = () => window.__talk("start", id);
+        u.onboundary = e => { if (!e.name || e.name === "word") window.__talk("word", id, e.charIndex, e.charIndex + (e.charLength || 0)); };
+        u.onend = u.onerror = () => window.__talk("done", id);
+        const v = this.pick(); if (v) u.voice = v;
+        ss.speak(u);
+      } catch (e) {}
+    },
+    stop() { Talk.on = false; Talk.who = null; try { if (window.AndroidVoice) window.AndroidVoice.stop(); else if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch (e) {} },
+    pick() {
+      if (this._v) return this._v;
+      const vs = window.speechSynthesis.getVoices(); if (!vs.length) return null;
+      this._v = vs.find(v => /en[-_]US/i.test(v.lang) && /Google|Samantha|Natural|Aria|Jenny/i.test(v.name)) || vs.find(v => /^en/i.test(v.lang)) || vs[0];
+      return this._v;
+    },
+  };
+  const buzz = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} };
+
+  // ================= CANVAS =================
+  const cv = document.getElementById("c"), ctx = cv.getContext("2d");
+  const W = 360, H = 700, TOP = 64, SH = 520, TRAY = TOP + SH;
+  let scale = 1, ox = 0, oy = 0, dpr = 1;
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    cv.width = Math.floor(innerWidth * dpr); cv.height = Math.floor(innerHeight * dpr);
+    scale = Math.min(cv.width / W, cv.height / H);
+    ox = (cv.width - W * scale) / 2; oy = (cv.height - H * scale) / 2;
+  }
+  addEventListener("resize", resize); resize();
+  function toLocal(e) { return { x: (e.clientX * dpr - ox) / scale, y: (e.clientY * dpr - oy) / scale }; }
+
+  // ================= DRAW HELPERS =================
+  const INK = "#2e2140";
+  function ell(c, x, y, rx, ry, rot) { c.beginPath(); c.ellipse(x, y, Math.max(0.1, rx), Math.max(0.1, ry), rot || 0, 0, Math.PI * 2); }
+  function fs(c, fill, lw) { if (fill) { c.fillStyle = fill; c.fill(); } if (lw !== 0) { c.lineWidth = lw || 3; c.strokeStyle = INK; c.stroke(); } }
+  function rr(c, x, y, w, h, r) { c.beginPath(); c.roundRect(x, y, w, h, r); }
+  function circ(c, x, y, r) { c.beginPath(); c.arc(x, y, Math.max(0.1, r), 0, Math.PI * 2); }
+  function blob(c, circles, fill, lw) {
+    c.strokeStyle = INK; c.lineWidth = lw * 2;
+    for (const [x, y, r] of circles) { circ(c, x, y, r); c.stroke(); }
+    c.fillStyle = fill; for (const [x, y, r] of circles) { circ(c, x, y, r); c.fill(); }
+  }
+  function shade(hex, amt) {
+    const n = parseInt(hex.slice(1), 16), f = v => Math.max(0, Math.min(255, Math.round(v + amt * 255)));
+    return `rgb(${f((n >> 16) & 255)},${f((n >> 8) & 255)},${f(n & 255)})`;
+  }
+  function text(c, s, x, y, size, fill, align, stroke, maxW) {
+    c.font = `900 ${size}px "Trebuchet MS", system-ui, sans-serif`; c.textAlign = align || "center"; c.textBaseline = "middle";
+    if (stroke) { c.lineWidth = stroke; c.strokeStyle = INK; c.lineJoin = "round"; c.strokeText(s, x, y, maxW); }
+    c.fillStyle = fill; c.fillText(s, x, y, maxW);
+  }
+  function star(c, x, y, r, fill) {
+    c.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, q = i % 2 ? r * 0.45 : r; c.lineTo(x + Math.cos(a) * q, y + Math.sin(a) * q); }
+    c.closePath(); fs(c, fill, 2);
+  }
+
+  // ================= CRITTERS =================
+  // Species shapes. Colors can be overridden per character.
+  const SPECIES = {
+    cat:      { ear: "cat", tail: "cat", nose: "#ff8fab", whiskers: true, muzzle: null },
+    bunny:    { ear: "bunny", tail: "puff", nose: "#ff8fab", whiskers: true, muzzle: "#fff", teeth: true },
+    raccoon:  { ear: "round", tail: "ringed", nose: INK, mask: true, muzzle: "#e9e4ee" },
+    puppy:    { ear: "floppy", tail: "wag", nose: INK, muzzle: "#f6e2c8", tongue: true },
+    fox:      { ear: "fox", tail: "fox", nose: INK, muzzle: "#fff" },
+    bear:     { ear: "round", tail: "nub", nose: INK, muzzle: "#e8c9a0" },
+    squirrel: { ear: "tuft", tail: "squirrel", nose: "#5a3825", muzzle: "#f5dcc0", teeth: true },
+    mouse:    { ear: "mouse", tail: "string", nose: "#ff8fab", whiskers: true },
+    hamster:  { ear: "small", tail: "nub", nose: "#ff8fab", cheeks: true, whiskers: true },
+    owl:      { bird: "owl", tail: "none" },
+    duck:     { bird: "duck", tail: "none" },
+    goose:    { bird: "goose", tail: "none" },
+  };
+
+  // ================= CHARACTER ART (soft-shaded cartoon style) =================
+  // Every character is drawn in code, so it can blink, breathe, gesture and lip-sync.
+  // (x, y) is the ground point; k = pixels per unit (a character is ~150 units tall).
+  const IRIS = { cat: "#5bbf6a", fox: "#e0901f", bunny: "#9a6a42", raccoon: "#7a5634", puppy: "#7a5634", bear: "#6b4426",
+    squirrel: "#6b4426", mouse: "#5a4fa0", hamster: "#5a3d2a", owl: "#ffb81f", duck: "#4a3f86", goose: "#4a3f86" };
+  const OPEN = { R: 0, M: 0, F: 0.15, C: 0.4, E: 0.55, O: 0.7, A: 1 };
+  const FLUFFY = { cat: 1, fox: 1, hamster: 1, squirrel: 1, raccoon: 1 };
+  function edge(hex) { return shade(hex, -0.42); }
+
+  // Fill a shape with cartoon lighting (light from the top-left): base colour, a soft core shadow
+  // on the lower right and a glossy highlight, then outline it in a darker tone of its own colour.
+  function paint(c, path, base, bx, by, rx, ry, lw) {
+    path(); c.save(); c.clip();
+    c.fillStyle = shade(base, -0.15); c.fillRect(bx - rx * 2.2, by - ry * 2.2, rx * 4.4, ry * 4.4);
+    ell(c, bx - rx * 0.16, by - ry * 0.18, rx * 1.02, ry * 0.98); c.fillStyle = base; c.fill();
+    const g = c.createRadialGradient(bx - rx * 0.42, by - ry * 0.5, 1, bx - rx * 0.42, by - ry * 0.5, Math.max(rx, ry) * 0.8);
+    g.addColorStop(0, "rgba(255,255,255,0.45)"); g.addColorStop(1, "rgba(255,255,255,0)");
+    c.fillStyle = g; c.fillRect(bx - rx * 2.2, by - ry * 2.2, rx * 4.4, ry * 4.4);
+    c.restore();
+    if (lw !== null) { path(); c.lineWidth = lw || 3; c.strokeStyle = edge(base); c.lineJoin = "round"; c.stroke(); }
+  }
+  function bodyPath(c) {
+    c.beginPath(); c.moveTo(-17, -86);
+    c.bezierCurveTo(-30, -72, -37, -32, -31, -14); c.quadraticCurveTo(0, -1, 31, -14);
+    c.bezierCurveTo(37, -32, 30, -72, 17, -86); c.quadraticCurveTo(0, -92, -17, -86); c.closePath();
+  }
+  function headPath(c, hy, rx, ry, fluffy) {
+    c.beginPath(); c.ellipse(0, hy, rx, ry, 0, Math.PI, 0);
+    if (fluffy) {
+      c.lineTo(rx * 1.04, hy + ry * 0.22); c.lineTo(rx * 0.88, hy + ry * 0.34); c.lineTo(rx * 1.0, hy + ry * 0.52); c.lineTo(rx * 0.8, hy + ry * 0.6);
+      c.lineTo(rx * 0.84, hy + ry * 0.78); c.quadraticCurveTo(0, hy + ry * 1.12, -rx * 0.84, hy + ry * 0.78);
+      c.lineTo(-rx * 0.8, hy + ry * 0.6); c.lineTo(-rx * 1.0, hy + ry * 0.52); c.lineTo(-rx * 0.88, hy + ry * 0.34); c.lineTo(-rx * 1.04, hy + ry * 0.22);
+      c.closePath();
+    } else c.ellipse(0, hy, rx, ry * 1.03, 0, 0, Math.PI);
+  }
+  function nose(c, y, col) {
+    c.beginPath(); c.moveTo(-5.5, y - 2); c.quadraticCurveTo(0, y - 5, 5.5, y - 2); c.quadraticCurveTo(4, y + 3, 0, y + 4); c.quadraticCurveTo(-4, y + 3, -5.5, y - 2); c.closePath();
+    c.fillStyle = col; c.fill(); c.lineWidth = 1.5; c.strokeStyle = shade(col, -0.3); c.stroke();
+    ell(c, -1.6, y - 1.6, 2, 1.1); c.fillStyle = "rgba(255,255,255,0.75)"; c.fill();
+  }
+  // Mouth shapes (visemes): R rest, M closed (m/b/p), F teeth on lip (f/v), C small, E wide, O round, A open.
+  function mouth(c, my, vis, mood) {
+    c.lineCap = "round"; c.lineJoin = "round";
+    const open = OPEN[vis] || 0;
+    if (vis && vis !== "R" && vis !== "M") {
+      let w = 8.5, h = 3 + open * 12;
+      if (vis === "E") { w = 11.5; h = 5.5; } else if (vis === "O") { w = 6; h = 10; } else if (vis === "F") { w = 8; h = 3.2; }
+      const shape = () => { c.beginPath(); c.ellipse(0, my + 2 + h / 2, w, h / 2 + 1.2, 0, 0, Math.PI * 2); };
+      shape(); c.fillStyle = "#5e1a2e"; c.fill();
+      c.save(); shape(); c.clip();
+      ell(c, 0, my + 3 + h, w * 0.8, h * 0.45 + 1); c.fillStyle = "#ff7f9b"; c.fill();
+      if (open > 0.3 || vis === "F" || vis === "E") { c.fillStyle = "#fff"; c.fillRect(-w, my - 0.5, w * 2, 3.4); }
+      c.restore();
+      shape(); c.lineWidth = 2; c.strokeStyle = "#3a1622"; c.stroke();
+      return;
+    }
+    c.lineWidth = 2.4; c.strokeStyle = "#3a1622";
+    if (vis === "M") { c.beginPath(); c.moveTo(-6.5, my + 3.5); c.quadraticCurveTo(0, my + 5.5, 6.5, my + 3.5); c.stroke(); return; }
+    if (mood === "happy") {
+      c.beginPath(); c.moveTo(-10, my + 1); c.quadraticCurveTo(0, my + 17, 10, my + 1); c.closePath(); c.fillStyle = "#5e1a2e"; c.fill(); c.stroke();
+      c.save(); c.clip(); ell(c, 0, my + 13, 6.5, 4.5); c.fillStyle = "#ff7f9b"; c.fill(); c.fillStyle = "#fff"; c.fillRect(-9, my, 18, 2.6); c.restore(); return;
+    }
+    if (mood === "worried") { c.beginPath(); c.moveTo(-7.5, my + 7); c.quadraticCurveTo(-3.5, my + 3, 0, my + 6); c.quadraticCurveTo(3.5, my + 9, 7.5, my + 5); c.stroke(); return; }
+    c.beginPath(); c.moveTo(-8, my + 1.5); c.quadraticCurveTo(-4, my + 7, 0, my + 2.5); c.quadraticCurveTo(4, my + 7, 8, my + 1.5); c.stroke();
+  }
+  function eyes(c, hy, t, ch, mood, opt) {
+    const seed = ch.seed || 0, iris = ch.eye || IRIS[ch.sp] || "#6b4426";
+    const cyc = (t + seed * 1.7) % 4.2, blink = cyc < 0.18 ? Math.sin((cyc / 0.18) * Math.PI) : 0;
+    const lookX = Math.sin(t * 0.7 + seed) * 2 + (opt.lookX || 0), lookY = (mood === "worried" ? 1.5 : 0) + (opt.lookY || 0);
+    const ex = opt.spread || 14, ey = hy - 4, rx = opt.rx || 9.5, ry = opt.ry || 11.5;
+    [-1, 1].forEach(sd => {
+      const x = sd * ex;
+      if (mood === "happy") {
+        c.beginPath(); c.moveTo(x - 7.5, ey + 2); c.quadraticCurveTo(x, ey - 9, x + 7.5, ey + 2);
+        c.lineWidth = 3.4; c.strokeStyle = "#2a1a2e"; c.lineCap = "round"; c.stroke(); return;
+      }
+      ell(c, x, ey, rx, ry); c.fillStyle = "#fff"; c.fill();
+      c.save(); ell(c, x, ey, rx, ry); c.clip();
+      const ix = x + lookX, iy = ey + 1 + lookY, ir = rx * 0.8;
+      const g = c.createRadialGradient(ix, iy + ir * 0.45, 0.5, ix, iy, ir);
+      g.addColorStop(0, shade(iris, 0.28)); g.addColorStop(1, shade(iris, -0.18));
+      circ(c, ix, iy, ir); c.fillStyle = g; c.fill();
+      circ(c, ix, iy, ir); c.lineWidth = 1.2; c.strokeStyle = shade(iris, -0.4); c.stroke();
+      if (ch.sp === "cat" && mood !== "worried") { ell(c, ix, iy, ir * 0.3, ir * 0.72); c.fillStyle = "#16101e"; c.fill(); }
+      else { circ(c, ix, iy, ir * (mood === "worried" ? 0.4 : 0.52)); c.fillStyle = "#16101e"; c.fill(); }
+      circ(c, ix + ir * 0.36, iy - ir * 0.42, ir * 0.3); c.fillStyle = "#fff"; c.fill();
+      circ(c, ix - ir * 0.32, iy + ir * 0.38, ir * 0.13); c.fill();
+      c.fillStyle = "rgba(60,30,70,0.16)"; c.fillRect(x - rx, ey - ry, rx * 2, ry * 0.5);
+      if (blink > 0) { c.fillStyle = ch.lid || ch.head || ch.fur; c.fillRect(x - rx - 1, ey - ry - 1, rx * 2 + 2, (ry * 2 + 2) * blink); }
+      c.restore();
+      c.beginPath(); c.ellipse(x, ey, rx, ry, 0, 0, Math.PI * 2); c.lineWidth = 1.3; c.strokeStyle = "rgba(42,26,46,0.55)"; c.stroke();
+      const lidY = ey - ry + (ry * 2) * blink;
+      c.beginPath(); c.moveTo(x - rx * 1.02, blink > 0 ? lidY : ey - ry * 0.25);
+      c.quadraticCurveTo(x, blink > 0 ? lidY - ry * 0.4 * (1 - blink) - 2 : ey - ry * 1.22, x + rx * 1.02, blink > 0 ? lidY : ey - ry * 0.25);
+      c.lineWidth = 3; c.strokeStyle = "#2a1a2e"; c.lineCap = "round"; c.stroke();
+      c.beginPath(); c.moveTo(x + sd * rx * 0.9, ey - ry * 0.55); c.lineTo(x + sd * (rx + 3), ey - ry * 0.85); c.lineWidth = 2.2; c.stroke();
+    });
+    // eyebrows show the mood
+    const by = ey - ry - 6 + (opt.browLift || 0);
+    c.lineWidth = 3.2; c.strokeStyle = opt.browCol || edge(ch.head || ch.fur); c.lineCap = "round";
+    [-1, 1].forEach(sd => {
+      const x = sd * ex, inX = x - sd * 7, outX = x + sd * 7; c.beginPath();
+      if (mood === "worried") { c.moveTo(inX, by - 3); c.quadraticCurveTo(x, by - 3, outX, by + 2); }
+      else if (mood === "happy") { c.moveTo(inX, by + 1); c.quadraticCurveTo(x, by - 7, outX, by + 1); }
+      else { c.moveTo(inX, by + 1); c.quadraticCurveTo(x, by - 3, outX, by); }
+      c.stroke();
+    });
+  }
+  function blush(c, x, y) {
+    const g = c.createRadialGradient(x, y, 0.5, x, y, 8); g.addColorStop(0, "rgba(255,105,140,0.5)"); g.addColorStop(1, "rgba(255,105,140,0)");
+    c.fillStyle = g; c.fillRect(x - 9, y - 9, 18, 18);
+  }
+  function limb(c, sx, sy, ang, fur, paw) {
+    c.save(); c.translate(sx, sy); c.rotate(ang);
+    paint(c, () => rr(c, -7, -2, 14, 30, 7), fur, 0, 12, 7, 16, 2.6);
+    paint(c, () => circ(c, 0, 28, 8.5), paw, 0, 28, 8.5, 8.5, 2.6);
+    c.strokeStyle = edge(paw); c.lineWidth = 1.4; c.beginPath(); c.moveTo(-3, 33); c.lineTo(-3, 36); c.moveTo(3, 33); c.lineTo(3, 36); c.stroke();
+    c.restore();
+  }
+  function sweat(c, x, y, t) {
+    const d = (t * 0.8) % 1;
+    c.globalAlpha = 1 - d * 0.6;
+    c.beginPath(); c.moveTo(x, y + d * 10 - 9); c.quadraticCurveTo(x + 6, y + d * 10, x, y + d * 10 + 4); c.quadraticCurveTo(x - 6, y + d * 10, x, y + d * 10 - 9);
+    c.fillStyle = "#9ee0ff"; c.fill(); c.lineWidth = 1.6; c.strokeStyle = "#3a8fc0"; c.stroke(); c.globalAlpha = 1;
+  }
+
+  // ================= PAINTED ART =================
+  // Characters made in Gemini: 4 frames each (mouth closed, "eh", "ah", eyes closed). Missing art falls back to the drawn version.
+  const ART = {
+    "detective": { w: 303, h: 640, headX: 0.545, headY: 0.172, units: 188 },
+    "rocco": { w: 347, h: 640, headX: 0.568, headY: 0.161, units: 176 },
+    "goose": { w: 291, h: 640, headX: 0.492, headY: 0.204, units: 180 },
+    "benny": { w: 239, h: 640, headX: 0.497, headY: 0.246, units: 192 },
+    "pip": { w: 337, h: 640, headX: 0.51, headY: 0.252, units: 176 },
+    "hoot": { w: 301, h: 640, headX: 0.496, headY: 0.286, units: 186 },
+    "felix": { w: 316, h: 640, headX: 0.571, headY: 0.191, units: 190 },
+    "bruno": { w: 319, h: 640, headX: 0.5, headY: 0.18, units: 204 },
+    "suki": { w: 310, h: 640, headX: 0.51, headY: 0.22, units: 178 },
+    "dottie": { w: 287, h: 640, headX: 0.499, headY: 0.211, units: 166 },
+    "milo": { w: 329, h: 640, headX: 0.527, headY: 0.187, units: 154 },
+    "hazel": { w: 314, h: 640, headX: 0.501, headY: 0.21, units: 148 },
+    "lop": { w: 235, h: 640, headX: 0.527, headY: 0.267, units: 196 },
+    "coco": { w: 236, h: 640, headX: 0.529, headY: 0.215, units: 190 },
+    "pepper": { w: 275, h: 640, headX: 0.502, headY: 0.18, units: 182 },
+    "polly": { w: 284, h: 640, headX: 0.502, headY: 0.147, units: 206 },
+    "gus": { w: 244, h: 640, headX: 0.516, headY: 0.161, units: 196 },
+    "nutmeg": { w: 304, h: 640, headX: 0.457, headY: 0.29, units: 176 },
+    "ruby": { w: 268, h: 640, headX: 0.461, headY: 0.193, units: 190 },
+    "ziggy": { w: 396, h: 640, headX: 0.501, headY: 0.282, units: 148 },
+    "olive": { w: 320, h: 640, headX: 0.505, headY: 0.299, units: 180 },
+    "sage": { w: 350, h: 640, headX: 0.509, headY: 0.223, units: 172 },
+    "det-royal": { w: 296, h: 640, headX: 0.521, headY: 0.287, units: 188 },
+    "det-officer": { w: 303, h: 640, headX: 0.53, headY: 0.188, units: 188 },
+    "det-gent": { w: 293, h: 640, headX: 0.546, headY: 0.201, units: 192 },
+    "det-noir": { w: 305, h: 640, headX: 0.525, headY: 0.255, units: 188 },
+    "det-artist": { w: 309, h: 640, headX: 0.475, headY: 0.206, units: 186 },
+  };
+  const BACKDROPS = {
+    "kitchen-day": { w: 720, h: 1290, off: 58 },
+    "kitchen-party": { w: 720, h: 1289, off: 58 },
+    "kitchen-night": { w: 720, h: 1279, off: 58 },
+    "beach-sunset": { w: 720, h: 1279, off: 40 },
+    "beach-day": { w: 720, h: 1279, off: 40 },
+    "library-night": { w: 720, h: 1278, off: 40 },
+    "library-day": { w: 720, h: 1279, off: 40 },
+    "park-festival": { w: 720, h: 1278, off: 40 },
+    "park-winter": { w: 720, h: 1279, off: 40 },
+    "park-autumn": { w: 720, h: 1279, off: 40 },
+    "park-summer": { w: 720, h: 1279, off: 40 },
+    "museum-b": { w: 720, h: 1279, off: 40 },
+    "museum-a": { w: 720, h: 1279, off: 40 },
+  };
+  function loadImg(src, done) { const im = new Image(); im.onload = done; im.src = src; return im; }
+  // Each character is one image with 4 frames side by side: mouth closed, "eh", "ah", eyes closed.
+  Object.entries(ART).forEach(([k, a]) => { a.loaded = 0; a.sheet = loadImg("art/" + k + ".webp", () => { a.loaded = 4; }); });
+  const FRAME_INDEX = { closed: 0, eh: 1, ah: 2, blink: 3 };
+  Object.entries(BACKDROPS).forEach(([k, b]) => { b.img = loadImg("art/" + k + ".webp", () => { b.ready = true; }); });
+  function artFor(ch) {
+    const k = ch.key === "detective" && ch.lookId && ch.lookId !== "classic" ? "det-" + ch.lookId : ch.key;
+    const a = ART[k]; return a && a.loaded >= 4 ? a : null;
+  }
+  function drawArt(c, x, y, k, t, ch, o, art) {
+    const mood = o.mood || "idle", vis = o.viseme, seed = ch.seed || 0;
+    const hop = o.jump ? Math.abs(Math.sin(t * 9)) : 0, shakeX = o.shake ? Math.sin(t * 40) * 4 : 0;
+    const fit = Math.min(1, 116 / (art.units * art.w / art.h)), H = art.units * fit, Wd = H * art.w / art.h;
+    let frame = "closed";
+    if (vis === "A" || vis === "O") frame = "ah";
+    else if (vis === "C" || vis === "E" || vis === "F") frame = "eh";
+    else if (mood === "happy") frame = "ah";
+    else if ((t + seed * 1.7) % 4.2 < 0.15) frame = "blink";
+    c.save(); c.translate(x + shakeX * k, y); c.scale(k * (o.flip ? -1 : 1), k);
+    ell(c, 0, 1, Wd * 0.42 - hop * 10, 8); c.fillStyle = "rgba(20,10,40,0.25)"; c.fill();
+    c.translate(0, -hop * 26);
+    const breathe = Math.sin(t * 2.4 + seed) * 0.012;
+    const sway = mood === "worried" ? 0.03 + Math.sin(t * 1.6) * 0.02 : Math.sin(t * 0.9 + seed) * 0.012;
+    const talk = frame === "eh" || frame === "ah" ? Math.sin(t * 11) * 0.006 : 0;
+    c.rotate(sway); c.scale(1 - breathe * 0.5, 1 + breathe + talk);
+    c.imageSmoothingQuality = "high";
+    const fw = art.sheet.naturalWidth / 4;
+    c.drawImage(art.sheet, FRAME_INDEX[frame] * fw, 0, fw, art.sheet.naturalHeight, -Wd / 2, -H, Wd, H);
+    if (mood === "worried") sweat(c, (art.headX - 0.5) * Wd + Wd * 0.3, -H * (1 - art.headY) - 6, t);
+    c.restore();
+  }
+  // Painted backgrounds with a little life added: light, steam, dust, snow or falling leaves.
+  function backdropKey(cs) { return cs.scene + "-" + cs.variant; }
+  function paintedScene(c, t, key) {
+    const b = BACKDROPS[key];
+    c.drawImage(b.img, 0, -b.off, W, W * b.h / b.w);
+    if (key === "kitchen-day") {
+      c.save(); c.globalCompositeOperation = "lighter";
+      const pulse = 0.08 + Math.sin(t * 0.7) * 0.03;
+      const g = c.createLinearGradient(60, 60, 220, 420); g.addColorStop(0, `rgba(255,220,150,${pulse})`); g.addColorStop(1, "rgba(255,220,150,0)");
+      c.fillStyle = g; c.beginPath(); c.moveTo(48, 50); c.lineTo(134, 50); c.lineTo(300, 430); c.lineTo(120, 430); c.closePath(); c.fill(); c.restore();
+    }
+    if (key.startsWith("kitchen")) for (let i = 0; i < 4; i++) { const p = (t * 0.45 + i / 4) % 1; c.globalAlpha = (1 - p) * 0.45; circ(c, 189 + Math.sin(t * 2 + i * 2) * 5, 206 - p * 70, 5 + p * 10); c.fillStyle = "#fff"; c.fill(); }
+    c.globalAlpha = 1;
+    if (key === "park-winter" || key === "park-festival") {
+      c.fillStyle = "#fff";
+      for (let i = 0; i < 46; i++) { const y = ((t * (18 + rnd(i) * 22) + rnd(i + 3) * SH) % (SH + 20)) - 10, x = (rnd(i + 7) * W + Math.sin(t * 0.8 + i) * 14 + W) % W; c.globalAlpha = 0.85; circ(c, x, y, 1.3 + rnd(i + 11) * 1.8); c.fill(); }
+    } else if (key === "park-autumn") {
+      for (let i = 0; i < 7; i++) { const p = (t * 0.1 + i / 7) % 1, lx = (i * 53 + Math.sin(t + i) * 30) % W, ly = p * SH;
+        c.save(); c.translate(lx, ly); c.rotate(t * 2 + i); c.beginPath(); c.moveTo(0, -6); c.quadraticCurveTo(5, 0, 0, 6); c.quadraticCurveTo(-5, 0, 0, -6); c.fillStyle = ["#f08a32", "#e5263f", "#ffc21a"][i % 3]; c.fill(); c.restore(); }
+    } else if (key === "beach-day" || key === "beach-sunset" || key === "park-summer") {
+      for (let i = 0; i < 6; i++) { c.globalAlpha = 0.5 * Math.max(0, Math.sin(t * 1.7 + i * 2.3)); star(c, 70 + rnd(i + 70) * 230, 250 + rnd(i + 80) * 30, 3, "#fff"); }
+    } else {
+      for (let i = 0; i < 14; i++) { const p = (t * 0.05 + rnd(i + 300)) % 1; c.globalAlpha = 0.6 * Math.sin(p * Math.PI); circ(c, 60 + rnd(i + 310) * 240 + Math.sin(t + i) * 6, 400 - p * 300, 1.3); c.fillStyle = "#fff4d0"; c.fill(); }
+    }
+    c.globalAlpha = 1;
+  }
+
+  function drawCritter(c, x, y, k, t, ch, o) {
+    o = o || {};
+    const painted = artFor(ch);
+    if (painted) { drawArt(c, x, y, k, t, ch, o, painted); return; }
+    const sp = SPECIES[ch.sp], fur = ch.fur, head = ch.head || fur, belly = ch.belly || shade(fur, 0.2), seed = ch.seed || 0;
+    const mood = o.mood || "idle", vis = o.viseme || null, talking = !!vis && vis !== "R";
+    const dark = shade(fur, -0.12), paw = shade(fur, 0.06);
+    const hop = o.jump ? Math.abs(Math.sin(t * 9)) : 0;
+    const breathe = Math.sin(t * 2.4 + seed) * 0.02;
+    const shakeX = o.shake ? Math.sin(t * 40) * 4 : 0;
+    c.save(); c.translate(x + shakeX * k, y); c.scale(k * (o.flip ? -1 : 1), k); c.lineJoin = "round"; c.lineCap = "round";
+    ell(c, 0, 2, 40 - hop * 12, 8); c.fillStyle = "rgba(20,10,40,0.2)"; c.fill();
+    c.translate(0, -hop * 26);
+    if (o.jump) { const sq = 1 + Math.cos(t * 18) * 0.05; c.scale(1 / sq, sq); }
+    if (sp.bird) { drawBird(c, t, ch, sp, o, mood, vis); c.restore(); return; }
+
+    // ---- tail ----
+    const sw = Math.sin(t * 2.6 + seed) * 0.25;
+    c.save();
+    if (sp.tail === "cat") {
+      c.beginPath(); c.moveTo(18, -22); c.bezierCurveTo(54, -18, 40 + sw * 30, -72, 58 + sw * 40, -90);
+      c.lineWidth = 16; c.strokeStyle = edge(fur); c.stroke(); c.lineWidth = 11; c.strokeStyle = fur; c.stroke();
+      if (ch.stripes) { c.lineWidth = 11; c.strokeStyle = dark; c.setLineDash([5, 8]); c.stroke(); c.setLineDash([]); }
+      c.lineWidth = 3; c.strokeStyle = "rgba(255,255,255,0.35)"; c.beginPath(); c.moveTo(20, -26); c.bezierCurveTo(50, -24, 36 + sw * 30, -72, 54 + sw * 40, -88); c.stroke();
+    } else if (sp.tail === "fox" || sp.tail === "squirrel" || sp.tail === "ringed") {
+      const big = sp.tail === "squirrel";
+      c.translate(big ? 26 : 22, big ? -40 : -24); c.rotate((big ? -0.25 : 0.9) + sw * 0.6);
+      const tp = () => { c.beginPath(); c.moveTo(-6, 6); c.bezierCurveTo(-(big ? 30 : 18), -10, -(big ? 26 : 16), big ? -80 : -54, 0, big ? -84 : -58); c.bezierCurveTo(big ? 26 : 16, big ? -80 : -54, big ? 30 : 18, -10, 6, 6); c.closePath(); };
+      paint(c, tp, fur, 0, big ? -38 : -26, big ? 24 : 15, big ? 46 : 30, 2.8);
+      c.save(); tp(); c.clip();
+      if (sp.tail === "fox") { ell(c, 0, -58, 16, 14); c.fillStyle = "#fff"; c.fill(); }
+      if (sp.tail === "ringed") { c.fillStyle = "#3b3445"; for (let i = 0; i < 4; i++) c.fillRect(-22, -52 + i * 14, 44, 6); }
+      c.strokeStyle = "rgba(255,255,255,0.3)"; c.lineWidth = 2; for (let i = 0; i < 5; i++) { c.beginPath(); c.moveTo(-6 + i * 3, -6 - i * 9); c.lineTo(-2 + i * 3, -16 - i * 9); c.stroke(); }
+      c.restore();
+    } else if (sp.tail === "puff") { paint(c, () => circ(c, 33, -20, 11), "#fbfaff", 33, -20, 11, 11, 2.4);
+    } else if (sp.tail === "wag") {
+      c.translate(20, -26); c.rotate(Math.sin(t * 16) * 0.45);
+      c.beginPath(); c.moveTo(0, 0); c.quadraticCurveTo(22, -10, 22, -30); c.lineWidth = 12; c.strokeStyle = edge(fur); c.stroke(); c.lineWidth = 7.5; c.strokeStyle = fur; c.stroke();
+    } else if (sp.tail === "string") {
+      c.beginPath(); c.moveTo(20, -14); c.bezierCurveTo(50, -8, 40 + sw * 30, -50, 60, -40); c.lineWidth = 4; c.strokeStyle = "#e87f9e"; c.stroke();
+    } else if (sp.tail === "nub") { paint(c, () => circ(c, 26, -20, 7), fur, 26, -20, 7, 7, 2.2); }
+    c.restore();
+
+    // ---- feet ----
+    const step = o.jump ? 0 : 0;
+    [-1, 1].forEach(sd => {
+      paint(c, () => ell(c, sd * 15, -5 - step, 13.5, 7.5), shade(fur, -0.06), sd * 15, -5, 13.5, 7.5, 2.6);
+      c.strokeStyle = edge(fur); c.lineWidth = 1.4; c.beginPath(); c.moveTo(sd * 15 - 4, -1); c.lineTo(sd * 15 - 4, -4); c.moveTo(sd * 15 + 4, -1); c.lineTo(sd * 15 + 4, -4); c.stroke();
+    });
+
+    // ---- body (breathing) ----
+    c.save(); c.translate(0, -14); c.scale(1 + breathe, 1 - breathe); c.translate(0, 14);
+    paint(c, () => bodyPath(c), fur, 0, -48, 32, 40, 3);
+    c.save(); bodyPath(c); c.clip();
+    if (ch.patches) { ell(c, -18, -60, 14, 12); c.fillStyle = "#f08a32"; c.fill(); ell(c, 16, -30, 12, 10); c.fillStyle = "#3b3445"; c.fill(); }
+    if (ch.stripes) { c.strokeStyle = dark; c.lineWidth = 4; [-62, -50].forEach(yy => { c.beginPath(); c.moveTo(-34, yy); c.quadraticCurveTo(-26, yy + 4, -20, yy); c.moveTo(34, yy); c.quadraticCurveTo(26, yy + 4, 20, yy); c.stroke(); }); }
+    paint(c, () => ell(c, 0, -38, 19, 24), belly, 0, -38, 19, 24, null);
+    if (ch.coat) {
+      c.beginPath(); c.rect(-50, -100, 100, 100); c.moveTo(-11, -92); c.lineTo(0, -48); c.lineTo(11, -92); c.closePath();
+      c.fillStyle = ch.coat; c.fill("evenodd");
+      const cg = c.createLinearGradient(-34, 0, 34, 0); cg.addColorStop(0, "rgba(255,255,255,0.18)"); cg.addColorStop(1, "rgba(0,0,0,0.22)");
+      c.fillStyle = cg; c.beginPath(); c.rect(-50, -100, 100, 100); c.moveTo(-11, -92); c.lineTo(0, -48); c.lineTo(11, -92); c.closePath(); c.fill("evenodd");
+      c.beginPath(); c.moveTo(-12, -92); c.lineTo(0, -48); c.lineTo(12, -92); c.lineWidth = 2.2; c.strokeStyle = edge(ch.coat); c.stroke();
+      if (ch.trim) { c.lineWidth = 4; c.strokeStyle = ch.trim; c.beginPath(); c.moveTo(-14, -92); c.lineTo(-2, -48); c.moveTo(14, -92); c.lineTo(2, -48); c.stroke(); }
+      [-36, -24].forEach(by => { circ(c, 0, by, 2.8); c.fillStyle = "#ffd34d"; c.fill(); c.lineWidth = 1.2; c.strokeStyle = "#a07a10"; c.stroke(); });
+    }
+    c.restore();
+    bodyPath(c); c.lineWidth = 3; c.strokeStyle = edge(ch.coat || fur); c.stroke();
+    c.restore();
+
+    // ---- arms ----
+    const armSkin = ch.coat || fur;
+    const wave = mood === "happy" || o.jump;
+    const aL = wave ? 2.5 + Math.sin(t * 12) * 0.35 : talking ? 0.45 + Math.abs(Math.sin(t * 4.5)) * 0.8 : 0.38 + Math.sin(t * 2.4 + seed) * 0.05;
+    limb(c, -24, -72, aL, armSkin, paw);
+    if (o.item === "magnifier") {
+      const a = Math.sin(t * 1.6) * 0.15 + (talking ? Math.sin(t * 6) * 0.1 : 0);
+      c.save(); c.translate(24, -72); c.rotate(-0.95 + a);
+      paint(c, () => rr(c, -7, -2, 14, 30, 7), armSkin, 0, 12, 7, 16, 2.6);
+      c.beginPath(); c.moveTo(0, 30); c.lineTo(0, 46); c.lineWidth = 9; c.strokeStyle = "#5a3418"; c.stroke(); c.lineWidth = 5.5; c.strokeStyle = "#a8703f"; c.stroke();
+      paint(c, () => circ(c, 0, 28, 8.5), paw, 0, 28, 8.5, 8.5, 2.6);
+      circ(c, 0, 62, 17); const lg = c.createRadialGradient(-5, 56, 2, 0, 62, 17); lg.addColorStop(0, "rgba(230,248,255,0.85)"); lg.addColorStop(1, "rgba(160,215,245,0.45)"); c.fillStyle = lg; c.fill();
+      c.lineWidth = 6.5; c.strokeStyle = "#7a5410"; c.stroke(); c.lineWidth = 4; c.strokeStyle = "#ffc94d"; c.stroke();
+      c.beginPath(); c.arc(0, 62, 11, 3.6, 4.6); c.lineWidth = 3; c.strokeStyle = "rgba(255,255,255,0.95)"; c.stroke();
+      c.restore();
+    } else {
+      const aR = wave ? -2.5 - Math.sin(t * 12 + 1) * 0.35 : -(0.38 + Math.sin(t * 2.4 + seed + 1) * 0.05);
+      limb(c, 24, -72, aR, armSkin, paw);
+    }
+    // outfit extras over the shoulders
+    if (ch.cape) {
+      const cp = () => { c.beginPath(); c.moveTo(-36, -60); c.quadraticCurveTo(-32, -94, 0, -92); c.quadraticCurveTo(32, -94, 36, -60);
+        c.quadraticCurveTo(27, -52, 18, -60); c.quadraticCurveTo(9, -52, 0, -60); c.quadraticCurveTo(-9, -52, -18, -60); c.quadraticCurveTo(-27, -52, -36, -60); c.closePath(); };
+      paint(c, cp, ch.coat, 0, -74, 36, 18, 2.6);
+      c.save(); cp(); c.clip(); c.strokeStyle = "rgba(110,60,25,0.4)"; c.lineWidth = 1.6;
+      for (let i = -5; i <= 5; i++) { c.beginPath(); c.moveTo(i * 7, -100); c.lineTo(i * 7, -50); c.stroke(); c.beginPath(); c.moveTo(-40, -90 + i * 6 + 30); c.lineTo(40, -90 + i * 6 + 30); c.stroke(); }
+      c.restore();
+    }
+    if (ch.tie) { [-1, 1].forEach(sd => { c.beginPath(); c.moveTo(0, -86); c.lineTo(sd * 9, -91); c.lineTo(sd * 9, -81); c.closePath(); c.fillStyle = ch.tie; c.fill(); c.lineWidth = 1.5; c.strokeStyle = edge(ch.tie); c.stroke(); }); circ(c, 0, -86, 2.6); c.fillStyle = ch.tie; c.fill(); c.stroke(); }
+    if (ch.scarf) { paint(c, () => rr(c, -22, -92, 44, 10, 5), ch.scarf, 0, -87, 22, 5, 2.2); c.save(); c.translate(12, -84); c.rotate(0.25 + Math.sin(t * 2.2) * 0.12); paint(c, () => rr(c, -5, 0, 10, 22, 4), ch.scarf, 0, 11, 5, 11, 2); c.restore(); }
+    if (ch.badge) star(c, -16, -64, 6, "#ffd34d");
+
+    // ---- head ----
+    const hy = -106, rx = 38, ry = 33;
+    const tilt = mood === "worried" ? 0.08 : talking ? Math.sin(t * 3) * 0.06 : Math.sin(t * 0.9 + seed) * 0.035;
+    const bob = talking ? -Math.abs(Math.sin(t * 10)) * 1.6 : 0;
+    c.save(); c.translate(0, bob); c.translate(0, hy + 20); c.rotate(tilt); c.translate(0, -(hy + 20));
+    const twitch = Math.sin(t * 7 + seed) > 0.97 ? 0.25 : 0;
+    // ears behind the head
+    if (sp.ear === "cat" || sp.ear === "fox") {
+      const big = sp.ear === "fox" ? 1.3 : 1;
+      [-1, 1].forEach(sd => {
+        c.save(); c.translate(sd * 21, hy - 18); c.rotate(sd * (0.28 + (sd > 0 ? twitch : 0)));
+        const ep = () => { c.beginPath(); c.moveTo(-12 * big, 8); c.quadraticCurveTo(-9 * big, -12 * big, 0, -26 * big); c.quadraticCurveTo(9 * big, -12 * big, 12 * big, 8); c.closePath(); };
+        paint(c, ep, head, 0, -8 * big, 12 * big, 16 * big, 2.8);
+        c.beginPath(); c.moveTo(-6 * big, 5); c.quadraticCurveTo(-4 * big, -8 * big, 0, -16 * big); c.quadraticCurveTo(4 * big, -8 * big, 6 * big, 5); c.closePath();
+        c.fillStyle = sp.ear === "fox" ? "#3a2414" : "#ffa3bb"; c.fill();
+        c.strokeStyle = "rgba(255,255,255,0.85)"; c.lineWidth = 1.4; c.beginPath(); c.moveTo(-2, 6); c.lineTo(-3, -4); c.moveTo(2, 6); c.lineTo(3, -5); c.stroke();
+        c.restore();
+      });
+    } else if (sp.ear === "bunny") {
+      [-1, 1].forEach(sd => {
+        c.save(); c.translate(sd * 14, hy - 24); c.rotate(sd * 0.16 + (sd > 0 ? twitch + Math.sin(t * 2) * 0.05 : 0));
+        paint(c, () => ell(c, 0, -27, 10.5, 31), head, 0, -27, 10.5, 31, 2.8);
+        ell(c, 0, -25, 5.5, 22); const ig = c.createLinearGradient(0, -47, 0, -3); ig.addColorStop(0, "#ffc2d2"); ig.addColorStop(1, "#ff9fb8"); c.fillStyle = ig; c.fill();
+        c.restore();
+      });
+    } else if (sp.ear === "round" || sp.ear === "small" || sp.ear === "mouse") {
+      const r = sp.ear === "mouse" ? 18 : sp.ear === "small" ? 9.5 : 12.5, d = sp.ear === "mouse" ? 31 : 26;
+      [-1, 1].forEach(sd => { paint(c, () => circ(c, sd * d, hy - 24, r), head, sd * d, hy - 24, r, r, 2.8); circ(c, sd * d, hy - 23, r * 0.56); c.fillStyle = sp.ear === "mouse" ? "#ffb3c6" : dark; c.fill(); });
+    } else if (sp.ear === "tuft") {
+      [-1, 1].forEach(sd => { c.save(); c.translate(sd * 21, hy - 22); c.rotate(sd * 0.3);
+        paint(c, () => { c.beginPath(); c.moveTo(-9, 6); c.quadraticCurveTo(-5, -20, 2, -24); c.quadraticCurveTo(7, -8, 9, 6); c.closePath(); }, head, 0, -8, 9, 14, 2.8);
+        c.strokeStyle = edge(head); c.lineWidth = 2; c.beginPath(); c.moveTo(2, -24); c.lineTo(-1, -31); c.moveTo(2, -24); c.lineTo(5, -30); c.stroke(); c.restore(); });
+    }
+    paint(c, () => headPath(c, hy, rx, ry, FLUFFY[ch.sp]), head, 0, hy, rx, ry, 3);
+    // markings
+    c.save(); headPath(c, hy, rx, ry, FLUFFY[ch.sp]); c.clip();
+    if (ch.stripes) { c.fillStyle = dark; [-9, 0, 9].forEach(dx => { rr(c, dx - 2.5, hy - 36, 5, 13, 3); c.fill(); }); }
+    if (ch.patches) { ell(c, -22, hy - 16, 16, 14); c.fillStyle = "#f08a32"; c.fill(); ell(c, 24, hy - 20, 12, 12); c.fillStyle = "#3b3445"; c.fill(); }
+    if (ch.sp === "fox") { [-1, 1].forEach(sd => { ell(c, sd * 18, hy + 16, 20, 14); c.fillStyle = "#fff"; c.fill(); }); }
+    if (sp.mask) {
+      c.beginPath(); c.moveTo(-36, hy - 6); c.quadraticCurveTo(-20, hy - 16, 0, hy - 6); c.quadraticCurveTo(20, hy - 16, 36, hy - 6); c.quadraticCurveTo(30, hy + 10, 14, hy + 4); c.quadraticCurveTo(0, hy, -14, hy + 4); c.quadraticCurveTo(-30, hy + 10, -36, hy - 6); c.fillStyle = "#3b3445"; c.fill();
+      [-1, 1].forEach(sd => { ell(c, sd * 14, hy - 20, 9, 3.5); c.fillStyle = "#f4f1fb"; c.fill(); });
+    }
+    if (sp.cheeks) { [-1, 1].forEach(sd => { ell(c, sd * 23, hy + 10, 14, 12); c.fillStyle = belly; c.fill(); }); }
+    c.restore();
+    if (sp.muzzle && !sp.mask && ch.sp !== "fox") paint(c, () => ell(c, 0, hy + 13, 16, 11), sp.muzzle === "#fff" ? belly : sp.muzzle, 0, hy + 13, 16, 11, 2);
+    else if (sp.mask) paint(c, () => ell(c, 0, hy + 13, 14, 10), sp.muzzle, 0, hy + 13, 14, 10, 2);
+    else if (sp.whiskers) [-1, 1].forEach(sd => paint(c, () => ell(c, sd * 6.5, hy + 12, 7.5, 6), belly, sd * 6.5, hy + 12, 7.5, 6, null));
+    blush(c, -25, hy + 9); blush(c, 25, hy + 9);
+    eyes(c, hy, t, ch, mood, { browCol: sp.mask ? "#f4f1fb" : undefined, lid: sp.mask ? "#3b3445" : undefined });
+    nose(c, hy + 6, sp.nose);
+    mouth(c, hy + 9, vis, mood);
+    if (!talking && mood !== "happy" && sp.teeth) { rr(c, -3.5, hy + 13, 7, 6, 1.5); c.fillStyle = "#fff"; c.fill(); c.lineWidth = 1.3; c.strokeStyle = "#3a1622"; c.stroke(); c.beginPath(); c.moveTo(0, hy + 13); c.lineTo(0, hy + 19); c.stroke(); }
+    if (!talking && mood === "idle" && sp.tongue) { ell(c, 3, hy + 17, 3.5, 4.5); c.fillStyle = "#ff7f9b"; c.fill(); c.lineWidth = 1.3; c.strokeStyle = "#a8324e"; c.stroke(); }
+    if (sp.whiskers) {
+      const ws = Math.sin(t * 2 + seed) * 1;
+      c.lineWidth = 1.5; c.strokeStyle = "rgba(42,26,46,0.75)"; c.beginPath();
+      [-1, 1].forEach(sd => { c.moveTo(sd * 13, hy + 9); c.lineTo(sd * 34, hy + 4 + ws); c.moveTo(sd * 13, hy + 12); c.lineTo(sd * 34, hy + 13 + ws); });
+      c.stroke();
+    }
+    if (sp.ear === "floppy") [-1, 1].forEach(sd => { c.save(); c.translate(sd * 33, hy - 12); c.rotate(sd * (0.32 + Math.sin(t * 3 + (talking ? t * 4 : 0)) * 0.07)); paint(c, () => ell(c, 0, 17, 11.5, 23), dark, 0, 17, 11.5, 23, 2.8); c.restore(); });
+    if (mood === "worried") sweat(c, 34, hy - 14, t);
+    drawHat(c, ch.hat, 0, hy, 34, t);
+    c.restore();
+    c.restore();
+  }
+
+  function drawBird(c, t, ch, sp, o, mood, vis) {
+    const fur = ch.fur, light = ch.belly || shade(fur, 0.2), owl = sp.bird === "owl", seed = ch.seed || 0;
+    const talking = !!vis && vis !== "R";
+    const flap = o.jump || mood === "happy" ? Math.sin(t * 14) * 0.6 : talking ? Math.abs(Math.sin(t * 5)) * 0.35 : Math.sin(t * 2) * 0.08;
+    const breathe = Math.sin(t * 2.4 + seed) * 0.02;
+    if (!owl) [-1, 1].forEach(sd => {
+      c.beginPath(); c.moveTo(sd * 14, -8); c.lineTo(sd * 14 - 12, 0); c.quadraticCurveTo(sd * 14 - 6, -3, sd * 14 - 1, 1); c.quadraticCurveTo(sd * 14 + 5, -3, sd * 14 + 12, 0); c.closePath();
+      c.fillStyle = "#ff9a2e"; c.fill(); c.lineWidth = 2.2; c.strokeStyle = "#b35d00"; c.stroke();
+    });
+    else [-1, 1].forEach(sd => { c.lineWidth = 3.5; c.strokeStyle = "#c07a1a"; c.beginPath(); for (let i = -1; i <= 1; i++) { c.moveTo(sd * 11, -10); c.lineTo(sd * 11 + i * 5, -2); } c.stroke(); });
+    [-1, 1].forEach(sd => { c.save(); c.translate(sd * 30, -66); c.rotate(sd * (0.22 + flap)); paint(c, () => ell(c, sd * 4, 16, 11.5, 25), shade(fur, -0.12), sd * 4, 16, 11.5, 25, 2.8);
+      c.strokeStyle = edge(fur); c.lineWidth = 1.5; for (let i = 0; i < 3; i++) { c.beginPath(); c.moveTo(sd * 4 - 6, 22 + i * 6); c.quadraticCurveTo(sd * 4, 26 + i * 6, sd * 4 + 6, 22 + i * 6); c.stroke(); } c.restore(); });
+    c.save(); c.translate(0, -10); c.scale(1 + breathe, 1 - breathe); c.translate(0, 10);
+    paint(c, () => ell(c, 0, -54, 34, 46), fur, 0, -54, 34, 46, 3);
+    paint(c, () => ell(c, 0, -44, 23, 31), light, 0, -44, 23, 31, null);
+    if (owl) { c.strokeStyle = shade(fur, -0.1); c.lineWidth = 2; for (let i = 0; i < 3; i++) for (let j = -1; j <= 1; j++) { c.beginPath(); c.arc(j * 10, -56 + i * 12, 4, 0.2, Math.PI - 0.2); c.stroke(); } }
+    c.restore();
+    const goose = sp.bird === "goose";
+    const tilt = talking ? Math.sin(t * 3) * 0.06 : Math.sin(t * 0.9 + seed) * 0.04, bob = talking ? -Math.abs(Math.sin(t * 10)) * 1.6 : 0;
+    const hy = goose ? -116 : -104;
+    c.save(); c.translate(0, bob); c.translate(0, hy + 24); c.rotate(tilt); c.translate(0, -(hy + 24));
+    if (goose) paint(c, () => rr(c, -12, -104, 24, 34, 11), fur, 0, -88, 12, 17, 2.8);
+    if (owl) [-1, 1].forEach(sd => paint(c, () => { c.beginPath(); c.moveTo(sd * 17, hy - 22); c.lineTo(sd * 31, hy - 44); c.lineTo(sd * 34, hy - 16); c.closePath(); }, fur, sd * 28, hy - 26, 8, 12, 2.6));
+    paint(c, () => ell(c, 0, hy, owl ? 39 : 30, owl ? 33 : 28), fur, 0, hy, owl ? 39 : 30, owl ? 33 : 28, 3);
+    if (owl) [-15, 15].forEach(ex => { circ(c, ex, hy - 3, 15); c.fillStyle = light; c.fill(); });
+    if (!owl) [-1, 1].forEach(sd => blush(c, sd * 21, hy + 9)); else [-1, 1].forEach(sd => blush(c, sd * 27, hy + 10));
+    eyes(c, hy, t, ch, mood, owl ? { spread: 15, rx: 11, ry: 11, lid: light } : { spread: 11.5, rx: 8, ry: 9.5 });
+    const open = (OPEN[vis] || 0) + (mood === "happy" ? 0.35 : 0);
+    if (owl) {
+      if (open > 0.05) { c.beginPath(); c.moveTo(-6, hy + 9); c.lineTo(6, hy + 9); c.lineTo(0, hy + 12 + open * 11); c.closePath(); c.fillStyle = "#5e1a2e"; c.fill(); }
+      c.beginPath(); c.moveTo(-5, hy + 10 + open * 6); c.lineTo(5, hy + 10 + open * 6); c.lineTo(0, hy + 17 + open * 8); c.closePath(); c.fillStyle = "#e08a22"; c.fill(); c.lineWidth = 2; c.strokeStyle = "#a8650f"; c.stroke();
+      c.beginPath(); c.moveTo(-7, hy + 4); c.lineTo(7, hy + 4); c.quadraticCurveTo(3, hy + 10, 0, hy + 15); c.quadraticCurveTo(-3, hy + 10, -7, hy + 4); c.closePath(); c.fillStyle = "#f2a03a"; c.fill(); c.stroke();
+    } else {
+      const by = hy + 8;
+      if (open > 0.05) { ell(c, 0, by + 3 + open * 4, 9, 2 + open * 4); c.fillStyle = "#5e1a2e"; c.fill(); }
+      c.save(); c.translate(0, by + 2); c.rotate(0); paint(c, () => { c.beginPath(); c.ellipse(0, 1 + open * 7, 12, 4.5, 0, 0, Math.PI); c.closePath(); }, "#ff9a2e", 0, 2 + open * 7, 12, 5, 2.2); c.restore();
+      paint(c, () => { c.beginPath(); c.ellipse(0, by + 2, 14, 7, 0, Math.PI, 0); c.quadraticCurveTo(0, by + 6, -14, by + 2); c.closePath(); }, "#ffa63e", 0, by - 1, 14, 7, 2.4);
+      c.fillStyle = "#b35d00"; circ(c, -4, by - 1, 1.2); c.fill(); circ(c, 4, by - 1, 1.2); c.fill();
+    }
+    if (mood === "worried") sweat(c, owl ? 36 : 28, hy - 16, t);
+    drawHat(c, ch.hat, 0, hy, owl ? 34 : 28, t);
+    c.restore();
+  }
+
+  function drawHat(c, hat, hx, hy, r, t) {
+    if (!hat) return;
+    c.lineJoin = "round";
+    if (hat === "deerstalker") {
+      ell(c, hx - r * 0.95, hy - r * 0.55, r * 0.42, r * 0.16, 0.35); fs(c, "#b98552", 2.5);
+      ell(c, hx + r * 0.95, hy - r * 0.55, r * 0.42, r * 0.16, -0.35); fs(c, "#b98552", 2.5);
+      c.beginPath(); c.arc(hx, hy - r * 0.45, r * 0.92, Math.PI, 0); c.closePath(); fs(c, "#c99862");
+      c.save(); c.beginPath(); c.arc(hx, hy - r * 0.45, r * 0.92, Math.PI, 0); c.closePath(); c.clip();
+      c.strokeStyle = "rgba(110,60,25,0.45)"; c.lineWidth = 2;
+      for (let i = -4; i <= 4; i++) { c.beginPath(); c.moveTo(hx + i * r * 0.25, hy - r * 1.5); c.lineTo(hx + i * r * 0.25, hy); c.stroke(); c.beginPath(); c.moveTo(hx - r, hy - r * 0.5 - i * r * 0.22); c.lineTo(hx + r, hy - r * 0.5 - i * r * 0.22); c.stroke(); }
+      c.restore();
+      c.beginPath(); c.arc(hx, hy - r * 0.45, r * 0.92, Math.PI, 0); c.closePath(); fs(c, null);
+      circ(c, hx, hy - r * 1.4, r * 0.12); fs(c, "#8b5a2b", 2);
+    } else if (hat === "fedora") {
+      ell(c, hx, hy - r * 0.6, r * 1.3, r * 0.26); fs(c, "#3b3445");
+      c.beginPath(); c.moveTo(hx - r * 0.75, hy - r * 0.6); c.quadraticCurveTo(hx - r * 0.8, hy - r * 1.55, hx, hy - r * 1.35); c.quadraticCurveTo(hx + r * 0.8, hy - r * 1.55, hx + r * 0.75, hy - r * 0.6); c.closePath(); fs(c, "#4a4256");
+      c.fillStyle = "#c2405e"; c.fillRect(hx - r * 0.74, hy - r * 0.88, r * 1.48, r * 0.22);
+    } else if (hat === "tophat") {
+      ell(c, hx, hy - r * 0.65, r * 1.15, r * 0.22); fs(c, "#2a2333");
+      rr(c, hx - r * 0.62, hy - r * 1.75, r * 1.24, r * 1.12, 4); fs(c, "#2a2333");
+      c.fillStyle = "#8a63ff"; c.fillRect(hx - r * 0.6, hy - r * 0.95, r * 1.2, r * 0.2);
+    } else if (hat === "beret") {
+      ell(c, hx + r * 0.15, hy - r * 0.78, r * 0.95, r * 0.42, -0.15); fs(c, "#e5263f");
+      circ(c, hx + r * 0.2, hy - r * 1.22, r * 0.1); fs(c, "#e5263f", 2);
+    } else if (hat === "police") {
+      rr(c, hx - r * 0.85, hy - r * 1.35, r * 1.7, r * 0.6, 8); fs(c, "#2f4b9a");
+      ell(c, hx, hy - r * 0.72, r * 0.9, r * 0.18); fs(c, "#1d2f63");
+      star(c, hx, hy - r * 1.05, r * 0.2, "#ffd34d");
+    } else if (hat === "crown") {
+      const b = hy - r * 0.72, w = r * 0.72, h = r * 0.75;
+      c.beginPath(); c.moveTo(hx - w, b); c.lineTo(hx - w, b - h * 0.55); c.lineTo(hx - w * 0.5, b - h * 0.15); c.lineTo(hx, b - h);
+      c.lineTo(hx + w * 0.5, b - h * 0.15); c.lineTo(hx + w, b - h * 0.55); c.lineTo(hx + w, b); c.closePath(); fs(c, "#ffc21a");
+      circ(c, hx, b - h * 0.32, r * 0.12); fs(c, "#ff4d6d", 2);
+    } else if (hat === "bow") {
+      [-1, 1].forEach(s => { c.beginPath(); c.moveTo(hx + r * 0.5, hy - r * 0.8); c.lineTo(hx + r * 0.5 + s * r * 0.4, hy - r * 1.05); c.lineTo(hx + r * 0.5 + s * r * 0.4, hy - r * 0.55); c.closePath(); fs(c, "#ff6f91", 2); });
+      circ(c, hx + r * 0.5, hy - r * 0.8, r * 0.1); fs(c, "#ff6f91", 2);
+    } else if (hat === "glasses") {
+      [-13, 13].forEach(ex => { circ(c, hx + ex, hy - 3, 11); c.lineWidth = 3; c.strokeStyle = INK; c.stroke(); });
+      c.beginPath(); c.moveTo(hx - 2, hy - 3); c.lineTo(hx + 2, hy - 3); c.stroke();
+    }
+  }
+
+  // ================= CHARACTERS =================
+  const CAST = {
+    goose:  { name: "Mrs. Goose",  sp: "goose",   fur: "#fbfbfb", belly: "#ffffff", hat: "bow", seed: 1 },
+    benny:  { name: "Benny Bunny", sp: "bunny",   fur: "#f4f1fb", belly: "#ffffff", seed: 2 },
+    rocco:  { name: "Rocco Raccoon", sp: "raccoon", fur: "#9a95a6", belly: "#d6d2de", seed: 3 },
+    pip:    { name: "Pip Puppy",   sp: "puppy",   fur: "#d9a066", belly: "#f6e2c8", seed: 4 },
+    hoot:   { name: "Professor Hoot", sp: "owl",  fur: "#a47a52", belly: "#efdcc0", hat: "glasses", seed: 5 },
+    felix:  { name: "Felix Fox",   sp: "fox",     fur: "#ff8a3d", belly: "#fff3e6", seed: 6 },
+    bruno:  { name: "Bruno Bear",  sp: "bear",    fur: "#9c6b45", belly: "#d9b48a", seed: 7 },
+    suki:   { name: "Suki Squirrel", sp: "squirrel", fur: "#c8643a", belly: "#f5dcc0", seed: 8 },
+    dottie: { name: "Dottie Duck", sp: "duck",    fur: "#ffd43b", belly: "#fff3b0", seed: 9 },
+    milo:   { name: "Milo Mouse",  sp: "mouse",   fur: "#b9b6c4", belly: "#e6e4ee", seed: 10 },
+    hazel:  { name: "Hazel Hamster", sp: "hamster", fur: "#f0b45c", belly: "#fff1d6", seed: 11 },
+    olive:  { name: "Olive Owl",   sp: "owl",     fur: "#8d6b4a", belly: "#e9d4b4", seed: 12 },
+    lop:    { name: "Lady Lop",    sp: "bunny",   fur: "#e8d3c0", belly: "#fff8f0", hat: "crown", seed: 13 },
+    coco:   { name: "Coco Bunny",  sp: "bunny",   fur: "#a9744f", belly: "#f1dcc6", seed: 14 },
+    pepper: { name: "Pepper Pup",  sp: "puppy",   fur: "#a7a3af", belly: "#eeeaf2", seed: 15 },
+    polly:  { name: "Polly Polar Bear", sp: "bear", fur: "#f4f1fb", belly: "#ffffff", seed: 16 },
+    gus:    { name: "Gus Goose",   sp: "goose",   fur: "#b4b8c2", belly: "#e3e5ea", seed: 17 },
+    nutmeg: { name: "Nutmeg Squirrel", sp: "squirrel", fur: "#8d8a99", belly: "#e3e0ea", seed: 18 },
+    ruby:   { name: "Ruby Fox",    sp: "fox",     fur: "#c0392b", belly: "#fff3e6", seed: 19 },
+    ziggy:  { name: "Ziggy Hamster", sp: "hamster", fur: "#f7f4ee", belly: "#ffffff", seed: 20 },
+    sage:   { name: "Sage Owl",    sp: "owl",     fur: "#b4b8c2", belly: "#eef0f4", seed: 21 },
+  };
+
+  Object.keys(CAST).forEach(k => { CAST[k].key = k; });
+  const LOOKS = [
+    { id: "classic", name: "Sherlock",  price: 0,    fur: "#f59a3c", belly: "#fff1dd", stripes: true, hat: "deerstalker", coat: "#b98552", cape: true },
+    { id: "noir",    name: "Noir",      price: 200,  fur: "#3b3445", belly: "#6c6378", hat: "fedora", coat: "#c9a66b", eye: "#ffd34d" },
+    { id: "gent",    name: "Gentleman", price: 400,  fur: "#a9a6b6", belly: "#e6e4ee", stripes: true, hat: "tophat", coat: "#2a2333", tie: "#e5263f", eye: "#4dc3ff" },
+    { id: "artist",  name: "Artiste",   price: 650,  fur: "#fbfaf7", belly: "#ffffff", hat: "beret", scarf: "#e5263f", eye: "#4dc3ff" },
+    { id: "officer", name: "Officer",   price: 900,  fur: "#fbf3e6", belly: "#ffffff", patches: true, hat: "police", coat: "#2f4b9a", badge: true },
+    { id: "royal",   name: "Royal",     price: 1500, fur: "#ffcf5a", belly: "#fff3cf", stripes: true, hat: "crown", coat: "#8a63ff", trim: "#fff" },
+  ];
+  const lookById = id => LOOKS.find(l => l.id === id) || LOOKS[0];
+  function lookChar(l) { return Object.assign({ name: "Detective Paws", key: "detective", sp: "cat", seed: 0 }, l, { id: undefined, lookId: l.id, name: "Detective Paws" }); }
+  function detective() { return lookChar(lookById(save.skin)); }
+
+  // ================= CLUE ICONS =================
+  // Each clue is drawn centred at (0,0) at roughly 24px size, then scaled.
+  function drawClue(c, cl, x, y, s, t) {
+    c.save(); c.translate(x, y); c.rotate(cl.r || 0); c.scale(s / 24, s / 24); c.lineJoin = "round"; c.lineCap = "round";
+    const col = cl.color || "#888";
+    switch (cl.type) {
+      case "crumbs": [[-7, 2, 3.5], [0, -3, 4], [6, 3, 3], [2, 7, 2.5], [-3, -8, 2.5], [9, -5, 2]].forEach(([a, b, r]) => { circ(c, a, b, r); fs(c, "#d99a4e", 1.5); }); break;
+      case "fur":
+        c.beginPath(); c.moveTo(-10, 8); c.quadraticCurveTo(-12, -6, -4, -12); c.quadraticCurveTo(-4, -2, 0, 2); c.quadraticCurveTo(2, -12, 9, -11);
+        c.quadraticCurveTo(4, -2, 10, 8); c.quadraticCurveTo(0, 12, -10, 8); fs(c, col, 2);
+        if (cl.striped) { c.strokeStyle = "#3b3445"; c.lineWidth = 2.5; c.beginPath(); c.moveTo(-8, 2); c.lineTo(8, 2); c.moveTo(-6, -5); c.lineTo(4, -5); c.stroke(); }
+        if (cl.tip) { c.save(); c.beginPath(); c.moveTo(-10, 8); c.quadraticCurveTo(-12, -6, -4, -12); c.quadraticCurveTo(-4, -2, 0, 2); c.quadraticCurveTo(2, -12, 9, -11); c.quadraticCurveTo(4, -2, 10, 8); c.quadraticCurveTo(0, 12, -10, 8); c.clip(); c.fillStyle = "#fff"; c.fillRect(-14, -14, 28, 9); c.restore(); }
+        break;
+      case "paw": ell(c, 0, 4, 7, 6); fs(c, col, 1.5); [[-7, -4], [-2.5, -8], [2.5, -8], [7, -4]].forEach(([a, b]) => { ell(c, a, b, 2.6, 3.2); fs(c, col, 1.5); }); break;
+      case "hand": ell(c, 0, 4, 6, 5.5); fs(c, col, 1.5); [[-8, -3, -0.9], [-4, -9, -0.35], [0, -10, 0], [4, -9, 0.35], [8, -3, 0.9]].forEach(([a, b, r]) => { ell(c, a, b, 1.6, 4, r); fs(c, col, 1.2); }); break;
+      case "feather": c.rotate(-0.5); ell(c, 0, -2, 5.5, 12); fs(c, col, 2); c.beginPath(); c.moveTo(0, 12); c.lineTo(0, -12); c.lineWidth = 1.5; c.strokeStyle = "#fff"; c.stroke();
+        c.strokeStyle = shade(col, -0.2); c.beginPath(); for (let i = -6; i < 8; i += 4) { c.moveTo(0, i); c.lineTo(-4, i - 3); c.moveTo(0, i); c.lineTo(4, i - 3); } c.stroke(); break;
+      case "carrot": c.beginPath(); c.moveTo(-5, -6); c.lineTo(5, -6); c.lineTo(0, 12); c.closePath(); fs(c, "#ff8a2e", 2); [-3, 0, 3].forEach(a => { ell(c, a, -10, 2, 5, a * 0.15); fs(c, "#3cb44a", 1.2); }); break;
+      case "cheese": c.beginPath(); c.moveTo(-10, 6); c.lineTo(10, 6); c.lineTo(10, -2); c.lineTo(-10, -8); c.closePath(); fs(c, "#ffd34d", 2); [[-3, 0, 2], [5, 2, 1.6], [-6, 3, 1.2]].forEach(([a, b, r]) => { circ(c, a, b, r); c.fillStyle = "#e0a800"; c.fill(); }); break;
+      case "paint": c.beginPath(); c.moveTo(0, -11); c.quadraticCurveTo(9, 2, 0, 9); c.quadraticCurveTo(-9, 2, 0, -11); fs(c, col, 2); [[-9, 8, 2.2], [8, 7, 1.8], [10, -2, 1.3]].forEach(([a, b, r]) => { circ(c, a, b, r); c.fillStyle = col; c.fill(); });
+        circ(c, -2, 1, 2); c.fillStyle = "rgba(255,255,255,0.7)"; c.fill(); break;
+      case "bone": c.beginPath(); c.moveTo(-11, 0); c.lineTo(9, 0); c.lineWidth = 2.5; c.strokeStyle = "#cfc8b8"; c.stroke();
+        for (let i = -7; i <= 5; i += 4) { c.beginPath(); c.moveTo(i, 0); c.lineTo(i - 3, -6); c.moveTo(i, 0); c.lineTo(i - 3, 6); c.lineWidth = 1.8; c.stroke(); }
+        circ(c, 10, 0, 3.5); fs(c, "#e9e3d6", 1.5); c.beginPath(); c.moveTo(-11, 0); c.lineTo(-15, -5); c.lineTo(-15, 5); c.closePath(); fs(c, "#e9e3d6", 1.5); break;
+      case "honey": c.beginPath(); c.moveTo(-9, -6); c.quadraticCurveTo(0, -10, 9, -6); c.quadraticCurveTo(7, 0, 4, 1); c.quadraticCurveTo(4, 9, 0, 9); c.quadraticCurveTo(-3, 9, -3, 3); c.quadraticCurveTo(-8, 2, -9, -6); fs(c, "#f5a623", 2);
+        ell(c, -3, -5, 3, 1.5); c.fillStyle = "rgba(255,255,255,0.7)"; c.fill(); break;
+      case "ticket": c.rotate(0.2); rr(c, -11, -7, 22, 14, 2); fs(c, "#ff6f91", 2); c.setLineDash([2, 2]); c.beginPath(); c.moveTo(4, -6); c.lineTo(4, 6); c.lineWidth = 1.5; c.strokeStyle = "#fff"; c.stroke(); c.setLineDash([]);
+        c.fillStyle = "#fff"; c.fillRect(-8, -3, 9, 2); c.fillRect(-8, 1, 7, 2); break;
+      case "acorn": ell(c, 0, 3, 7, 8); fs(c, "#c98b4f", 2); c.beginPath(); c.arc(0, -3, 8.5, Math.PI, 0); c.closePath(); fs(c, "#7a4f2a", 2); c.beginPath(); c.moveTo(0, -11); c.lineTo(1, -15); c.lineWidth = 2; c.strokeStyle = INK; c.stroke(); break;
+      case "shells": [[-6, 2, 0.6], [6, -2, -0.4]].forEach(([a, b, r]) => { c.save(); c.translate(a, b); c.rotate(r); c.beginPath(); c.arc(0, 0, 6, 0, Math.PI); c.closePath(); fs(c, "#c98b4f", 1.8); c.restore(); }); break;
+      case "leaf": c.rotate(0.6); c.beginPath(); c.moveTo(0, -12); c.quadraticCurveTo(10, 0, 0, 12); c.quadraticCurveTo(-10, 0, 0, -12); fs(c, col, 2); c.beginPath(); c.moveTo(0, -10); c.lineTo(0, 10); c.lineWidth = 1.4; c.strokeStyle = shade(col, -0.25); c.stroke(); break;
+      case "scratch": c.strokeStyle = "#5b4636"; c.lineWidth = 2.4; for (let i = -1; i <= 1; i++) { c.beginPath(); c.moveTo(-8 + i * 5, -9); c.quadraticCurveTo(i * 5, 0, 8 + i * 5, 9); c.stroke(); } break;
+      case "glasses": [-6, 6].forEach(a => { circ(c, a, 0, 5); c.fillStyle = "rgba(190,230,255,0.6)"; c.fill(); c.lineWidth = 2; c.strokeStyle = INK; c.stroke(); }); c.beginPath(); c.moveTo(-1, 0); c.lineTo(1, 0); c.stroke(); break;
+      case "button": circ(c, 0, 0, 8); fs(c, col, 2); [[-2.5, -2.5], [2.5, -2.5], [-2.5, 2.5], [2.5, 2.5]].forEach(([a, b]) => { circ(c, a, b, 1.3); c.fillStyle = INK; c.fill(); }); break;
+      case "seed": [[-5, 0, -0.4], [4, -3, 0.5], [2, 6, 0.1]].forEach(([a, b, r]) => { ell(c, a, b, 3, 5.5, r); fs(c, "#3b3445", 1.5); }); break;
+      case "balloon":
+        c.beginPath(); c.moveTo(-11, -3); c.lineTo(-5, -11); c.lineTo(-1, -4); c.lineTo(5, -12); c.lineTo(8, -3); c.lineTo(12, 1); c.lineTo(4, 3); c.lineTo(1, 8); c.lineTo(-6, 3); c.closePath(); fs(c, col, 2);
+        c.beginPath(); c.moveTo(1, 8); c.lineTo(-2, 12); c.lineTo(4, 12); c.closePath(); fs(c, col, 1.5);
+        c.beginPath(); c.moveTo(1, 12); c.quadraticCurveTo(6, 15, 2, 18); c.lineWidth = 1.4; c.strokeStyle = INK; c.stroke(); break;
+      case "webbed":
+        c.beginPath(); c.moveTo(0, 11); c.lineTo(-11, -5); c.quadraticCurveTo(-6, -3, -4, -11); c.quadraticCurveTo(0, -5, 4, -11); c.quadraticCurveTo(6, -3, 11, -5); c.closePath(); fs(c, col, 2);
+        c.beginPath(); c.moveTo(0, 9); c.lineTo(-8, -4); c.moveTo(0, 9); c.lineTo(0, -6); c.moveTo(0, 9); c.lineTo(8, -4); c.lineWidth = 1.4; c.strokeStyle = shade(col, -0.25); c.stroke(); break;
+      case "ball":
+        circ(c, 0, 0, 10); fs(c, "#d7ef4a", 2);
+        c.beginPath(); c.arc(-13, 0, 10, -0.9, 0.9); c.moveTo(13 - 10 * Math.cos(0.9) + 0.01, -10 * Math.sin(0.9)); c.arc(13, 0, 10, Math.PI - 0.9, Math.PI + 0.9, true);
+        c.lineWidth = 2; c.strokeStyle = "#fff"; c.stroke(); break;
+      case "page":
+        c.beginPath(); c.moveTo(-10, -11); c.lineTo(9, -11); c.lineTo(10, 3); c.lineTo(6, 6); c.lineTo(8, 9); c.lineTo(2, 11); c.lineTo(-3, 8); c.lineTo(-10, 11); c.closePath(); fs(c, "#fffaf0", 2);
+        c.strokeStyle = "#b7a8c9"; c.lineWidth = 1.3; c.beginPath(); for (let i = -6; i <= 4; i += 4) { c.moveTo(-7, i); c.lineTo(6, i); } c.stroke(); break;
+      case "key":
+        circ(c, -6, -5, 6); fs(c, "#ffc21a", 2); circ(c, -6, -5, 2.4); c.fillStyle = INK; c.fill();
+        c.beginPath(); c.moveTo(-2, -1); c.lineTo(9, 10); c.lineWidth = 4.5; c.strokeStyle = INK; c.stroke(); c.lineWidth = 2.5; c.strokeStyle = "#ffc21a"; c.stroke();
+        c.beginPath(); c.moveTo(5, 6); c.lineTo(8, 3); c.moveTo(8, 9); c.lineTo(11, 6); c.lineWidth = 2.5; c.strokeStyle = INK; c.stroke(); break;
+      case "seashell":
+        c.beginPath(); c.moveTo(0, 10); c.lineTo(-11, -2); c.quadraticCurveTo(-8, -12, 0, -12); c.quadraticCurveTo(8, -12, 11, -2); c.closePath(); fs(c, col || "#ffb8a6", 2);
+        c.beginPath(); for (let a = -2; a <= 2; a++) { c.moveTo(0, 9); c.lineTo(a * 4.5, -10); } c.lineWidth = 1.3; c.strokeStyle = shade(col || "#ffb8a6", -0.2); c.stroke();
+        rr(c, -4, 8, 8, 4, 2); fs(c, col || "#ffb8a6", 1.5); break;
+      case "petal":
+        [[-4, 0, -0.5], [5, 2, 0.6]].forEach(([a, b, r]) => { c.save(); c.translate(a, b); c.rotate(r); c.beginPath(); c.moveTo(0, 8); c.quadraticCurveTo(-8, 0, 0, -9); c.quadraticCurveTo(8, 0, 0, 8); fs(c, col, 1.8); c.restore(); }); break;
+    }
+    c.restore();
+  }
+
+  // ================= CASES =================
+  const CASES = [
+    { id: 1, title: "The Missing Birthday Cake", place: "Mrs. Goose's kitchen", scene: "kitchen", variant: "day", client: "goose", time: 120,
+      intro: [["client", "Detective! My birthday cake vanished right off the kitchen table!"], ["cat", "Don't worry, Mrs. Goose. Paws is on the case!"], ["cat", "Let me search the kitchen for clues. Every crumb counts..."]],
+      clues: [
+        { type: "crumbs", name: "Cake crumbs", x: 53, y: 268, s: 20 },
+        { type: "fur", name: "Grey striped fur", color: "#9a95a6", striped: true, x: 88, y: 202, s: 24, r: 0.3 },
+        { type: "hand", name: "Tiny handprint", color: "#6e6878", x: 325, y: 330, s: 22, r: -0.2 },
+        { type: "paint", name: "Pink frosting", color: "#ff8fb1", x: 155, y: 355, s: 22 },
+        { type: "bone", name: "Fish bone", x: 75, y: 478, s: 26, r: 0.2 },
+      ],
+      suspects: [
+        { who: "benny", alibi: "I only eat carrots! I was in the garden all day." },
+        { who: "rocco", alibi: "Cake? Never seen one. My little hands are very, uh, clean." },
+        { who: "pip", alibi: "I was napping in my bed all afternoon, woof!" },
+      ], culprit: 1, reveal: "Rocco climbed through the window with his tiny hands. He said the cake smelled too good to resist! He'll bake Mrs. Goose a new one." },
+
+    { id: 2, title: "The Stolen Sunflower Painting", place: "City Art Museum", scene: "museum", variant: "a", client: "hoot", time: 120,
+      intro: [["client", "Hoo-hoo! The famous Sunflower painting is gone from its frame!"], ["cat", "A real art heist! Let's look around the gallery, Professor."]],
+      clues: [
+        { type: "fur", name: "Orange fur", color: "#ff8a3d", x: 64, y: 372, s: 22, r: -0.3 },
+        { type: "paint", name: "Wet yellow paint", color: "#ffd34d", x: 196, y: 468, s: 22 },
+        { type: "fur", name: "White-tipped tail fur", color: "#ff8a3d", tip: true, x: 300, y: 412, s: 22, r: 0.4 },
+        { type: "paw", name: "Pointy paw print", color: "#a85a24", x: 268, y: 488, s: 22, r: 0.3 },
+        { type: "ticket", name: "Museum ticket stub", x: 120, y: 444, s: 24 },
+      ],
+      suspects: [
+        { who: "felix", alibi: "I'm an art LOVER, not an art thief! Okay... maybe a little of both." },
+        { who: "bruno", alibi: "I was at the honey shop all morning. Smell my paws!" },
+        { who: "suki", alibi: "I was gathering acorns in the park, I promise!" },
+      ], culprit: 0, reveal: "Felix wanted the Sunflower painting for his den. His orange, white-tipped tail gave him away! The painting is back on the wall." },
+
+    { id: 3, title: "The Picnic Pilferer", place: "Willow Park", scene: "park", variant: "summer", client: "dottie", time: 120,
+      intro: [["client", "Quack! Someone raided our picnic basket. All the sandwiches are gone!"], ["cat", "Hungry thieves always leave a trail. Let's search the park!"]],
+      clues: [
+        { type: "paw", name: "Big brown paw print", color: "#7a4f2e", x: 222, y: 488, s: 30, r: -0.2 },
+        { type: "honey", name: "Sticky honey drip", x: 300, y: 296, s: 22 },
+        { type: "fur", name: "Brown fur on the tree", color: "#9c6b45", x: 78, y: 300, s: 22, r: 0.2 },
+        { type: "crumbs", name: "Sandwich crumbs", x: 150, y: 448, s: 20 },
+        { type: "ticket", name: "Honey shop receipt", x: 330, y: 452, s: 22 },
+      ],
+      suspects: [
+        { who: "bruno", alibi: "Me? I was... uh... just taking a nap under a tree." },
+        { who: "benny", alibi: "Sandwiches? I'm a carrot kind of bunny." },
+        { who: "suki", alibi: "I was way up in my tree all day, counting nuts." },
+      ], culprit: 0, reveal: "Bruno smelled honey in the picnic basket and couldn't help himself. He's sharing his honey with everyone at the next picnic." },
+
+    { id: 4, title: "The Cookie Crumble Caper", place: "Pip's kitchen at night", scene: "kitchen", variant: "night", client: "pip", time: 110,
+      intro: [["client", "Woof! I left a jar full of cookies last night. Now it's empty!"], ["cat", "A midnight snacker... Let's use the moonlight and look closely."]],
+      clues: [
+        { type: "paw", name: "Tiny grey footprints", color: "#8d8a99", x: 160, y: 488, s: 16, r: 0.4 },
+        { type: "cheese", name: "Nibbled cheese", x: 246, y: 244, s: 22 },
+        { type: "fur", name: "Soft grey fur", color: "#b9b6c4", x: 236, y: 140, s: 20 },
+        { type: "crumbs", name: "Cookie crumbs", x: 262, y: 474, s: 18 },
+        { type: "scratch", name: "Tiny claw scratches", x: 80, y: 346, s: 20 },
+      ],
+      suspects: [
+        { who: "milo", alibi: "I-I was asleep in my little hole in the wall! Squeak!" },
+        { who: "hazel", alibi: "I keep my snacks in my cheeks. Golden fur, see? Not grey!" },
+        { who: "rocco", alibi: "I've turned over a new leaf. No more midnight snacks for me!" },
+      ], culprit: 0, reveal: "Milo sneaked out of his mouse hole for a cookie... then 47 more. He's helping Pip bake a fresh batch." },
+
+    { id: 5, title: "The Vanishing Crown", place: "Royal Gallery", scene: "museum", variant: "b", client: "lop", time: 110,
+      intro: [["client", "Detective, the Royal Crown has vanished from its glass case!"], ["cat", "Nobody steals from the Royal Gallery on my watch. Let's investigate."]],
+      clues: [
+        { type: "feather", name: "Brown feather", color: "#8d6b4a", x: 206, y: 336, s: 24 },
+        { type: "scratch", name: "Talon scratches", x: 168, y: 232, s: 22 },
+        { type: "glasses", name: "Tiny reading glasses", x: 82, y: 424, s: 22 },
+        { type: "leaf", name: "Oak leaf", color: "#6fbf4a", x: 318, y: 484, s: 20 },
+        { type: "feather", name: "Another feather", color: "#8d6b4a", x: 44, y: 156, s: 20 },
+      ],
+      suspects: [
+        { who: "olive", alibi: "Hoo, me? I was asleep. Owls sleep in the daytime, you know." },
+        { who: "felix", alibi: "I'm done with stealing! I only paint pictures now." },
+        { who: "hazel", alibi: "I was running on my wheel all night. 300 laps!" },
+      ], culprit: 0, reveal: "Olive flew in at night. She only wanted something shiny for her nest! The crown is safely back in its case." },
+
+    { id: 6, title: "The Great Acorn Heist", place: "Willow Park in autumn", scene: "park", variant: "autumn", client: "bruno", time: 100,
+      intro: [["client", "My winter acorn stash is gone! All 200 of them!"], ["cat", "Hmm, an acorn thief. Let's search the autumn leaves for clues."]],
+      clues: [
+        { type: "shells", name: "Cracked acorn shells", x: 112, y: 486, s: 22 },
+        { type: "fur", name: "Fluffy red fur", color: "#c8643a", x: 52, y: 238, s: 22, r: -0.4 },
+        { type: "paw", name: "Small paw prints", color: "#7a3f22", x: 196, y: 404, s: 18, r: -0.3 },
+        { type: "acorn", name: "Dropped acorn", x: 296, y: 312, s: 22 },
+        { type: "leaf", name: "Chewed leaf", color: "#e8892e", x: 330, y: 472, s: 22 },
+      ],
+      suspects: [
+        { who: "suki", alibi: "Acorns? Never heard of them! *hides cheeks*" },
+        { who: "hazel", alibi: "Seeds are my thing, not acorns. And my fur is golden!" },
+        { who: "dottie", alibi: "Quack! I was swimming in the pond all day." },
+      ], culprit: 0, reveal: "Suki got carried away collecting for winter. She's sharing her stash with Bruno, and they're best friends now!" },
+  ];
+
+  // ---------- Cases 7–50 ----------
+  // Format: C(title, place, scene, variant, client, intro, clues, suspects, culprit, reveal)
+  //   intro:    [["c", client line], ["d", detective line]]
+  //   clues:    [type, name, color or options, hiding spot number] — spots are listed in SPOTS below
+  //   suspects: [character, alibi] — culprit is the index of the guilty suspect (the game shuffles the lineup order)
+  const SPOTS = {
+    kitchen_day: [[88,204],[265,147],[53,270],[38,368],[155,355],[288,430],[325,330],[140,234],[225,190],[180,288],[313,168],[75,480],[183,118],[175,505]],
+    kitchen:  [[110,166],[176,150],[150,322],[120,396],[214,480],[300,470],[322,330],[264,224],[40,300],[230,290],[330,200],[100,500],[24,230],[150,506]],
+    museum_a: [[68,177],[180,113],[295,177],[40,299],[72,408],[324,261],[180,318],[223,459],[14,152],[346,152],[144,504],[288,382],[180,216],[32,216]],
+    museum_b: [[65,165],[180,113],[295,177],[180,261],[36,344],[72,459],[252,433],[331,254],[119,158],[238,158],[162,510],[288,344]],
+    park: [[29,190],[126,37],[252,171],[310,254],[180,229],[108,356],[331,344],[198,408],[43,484],[259,504],[335,152],[18,325],[151,152]],
+    library: [[25,88],[324,184],[25,229],[130,216],[223,235],[54,318],[180,344],[331,293],[180,113],[288,395],[90,472],[223,484]],
+    beach: [[90,254],[25,299],[270,293],[338,248],[180,229],[198,369],[317,433],[58,382],[126,484],[295,177],[72,62],[36,190]],
+  };
+  function C(title, place, scene, variant, client, intro, clues, suspects, culprit, reveal) {
+    const id = CASES.length + 1, sp = SPOTS[scene === "museum" ? "museum_" + variant : scene === "kitchen" ? "kitchen_day" : scene];
+    const k = 1 - Math.min(0.25, (id - 7) * 0.006);
+    CASES.push({ id, title, place, scene, variant, client, time: Math.max(75, 115 - (id - 7)),
+      intro: intro.map(([w, s]) => [w === "c" ? "client" : "cat", s]),
+      clues: clues.map(([type, name, opt, spot], i) => Object.assign(
+        { type, name, x: sp[spot - 1][0], y: sp[spot - 1][1], s: Math.round(22 * k), r: (((id * 7 + i * 3) % 7) - 3) * 0.12 },
+        typeof opt === "string" ? { color: opt } : (opt || {}))),
+      suspects: suspects.map(([who, alibi]) => ({ who, alibi })), culprit, reveal });
+  }
+  const ORANGE_FUR = "#ff8a3d", WHITE = "#f4f1fb", GREY_FUR = "#b9b6c4", GREY_PAW = "#8d8a99", BROWN_FUR = "#9c6b45";
+
+  C("The Snowman's Missing Nose", "Willow Park in winter", "park", "winter", "pip",
+    [["c", "Woof! I built the best snowman ever, and someone took his carrot nose!"], ["d", "Fresh snow shows every footprint. Let's take a look."]],
+    [["carrot", "Carrot nibbles", null, 8], ["fur", "Long white fur", WHITE, 1], ["paw", "Big hoppy footprints", "#9a8fb0", 10], ["leaf", "Chewed carrot top", "#3cb44a", 9], ["ticket", "Veggie shop receipt", null, 3]],
+    [["benny", "Me? I was home all day, warm by the fire!"], ["hazel", "I was napping. Hamsters love naps!"], ["dottie", "Quack! I was ice skating on the pond."]], 0,
+    "Benny found the carrot nose too tasty to resist! He gave the snowman a shiny new pinecone nose.");
+
+  C("The Party Balloon Popper", "Hazel's birthday party", "kitchen", "party", "hazel",
+    [["c", "My birthday balloons! Someone popped them before the party!"], ["d", "Pop goes the mystery! Let's find out who did it."]],
+    [["feather", "Yellow feather", "#ffd43b", 1], ["balloon", "Popped balloon", "#ff6f91", 8], ["paint", "Pond water puddle", "#5ec4ff", 6], ["crumbs", "Bread crumbs", null, 3], ["webbed", "Webbed footprint", "#ff9a2e", 5]],
+    [["pip", "I chase balloons, but I never pop them!"], ["dottie", "Quack! I was... practising my flying."], ["rocco", "I was hanging streamers all morning!"]], 1,
+    "Dottie tied balloons to herself to fly higher, and they popped one by one! She's bringing new balloons for the party.");
+
+  C("The Sparkling Gem", "Royal Gallery", "museum", "b", "lop",
+    [["c", "The Royal Gem was in this glass case. Now it's gone!"], ["d", "Gems don't walk away by themselves. Let's search the gallery."]],
+    [["fur", "Golden fur", "#f0b45c", 3], ["seed", "Sunflower seeds", null, 6], ["paw", "Tiny pink paw prints", "#ff9fb8", 7], ["scratch", "Scratches on the glass", null, 4], ["shells", "Nibbled seed shells", null, 12]],
+    [["hazel", "Gem? What gem? *mumbles with full cheeks*"], ["milo", "I was home eating cheese! My fur is grey, see?"], ["olive", "I don't collect shiny things anymore. Really!"]], 0,
+    "Hazel hid the gem in her cheek pouches. She thought it was a giant shiny seed! The gem is back in its case.");
+
+  C("Pip's Missing Bone", "Pip's kitchen", "kitchen", "day", "pip",
+    [["c", "Woof! My favourite bone is missing from my bed!"], ["d", "Don't worry, Pip. We'll sniff out the thief."]],
+    [["fur", "Orange fur", ORANGE_FUR, 4], ["fur", "White-tipped fur", { color: ORANGE_FUR, tip: true }, 9], ["paw", "Muddy paw prints", "#7a4f2e", 5], ["leaf", "Garden leaf", "#6fbf4a", 1], ["bone", "Bone crumbs", null, 12]],
+    [["felix", "I only paint pictures now! ...Pictures of bones."], ["rocco", "Bones? I'm a cake fan. Everyone knows that!"], ["suki", "I bury acorns, not bones!"]], 0,
+    "Felix buried Pip's bone in the garden, an old fox habit! He dug it back up, and now they play fetch together.");
+
+  C("The Pond Boat Puzzle", "Willow Park", "park", "summer", "dottie",
+    [["c", "Quack! My toy boat was sailing on the pond, and now it's gone!"], ["d", "A boat-napping! Let's look around the pond."]],
+    [["paw", "Wet paw prints", "#d9a066", 6], ["fur", "Floppy-ear fur", "#d9a066", 12], ["ball", "Chewed tennis ball", null, 5], ["button", "Collar tag", "#ffd34d", 3], ["paint", "Splashed water", "#5ec4ff", 7]],
+    [["pip", "Woof! I was chasing my ball... near the pond... maybe."], ["bruno", "I'm too big to sneak around that little pond!"], ["benny", "I was in the carrot patch all morning."]], 0,
+    "Pip thought the boat was a floating stick and played fetch with it! He brought it back, a little chewed but still floating.");
+
+  C("The Winter Trophy", "The Winter Festival", "park", "festival", "lop",
+    [["c", "The golden trophy for the Winter Festival has disappeared!"], ["d", "The festival is tomorrow. We'd better crack this case fast!"]],
+    [["feather", "White feather", "#fbfbfb", 3], ["webbed", "Orange webbed footprint", "#ff9a2e", 10], ["crumbs", "Cake crumbs", null, 9], ["paint", "Pink frosting", "#ff8fb1", 13], ["ticket", "Bakery receipt", null, 7]],
+    [["goose", "Me? I've been baking for the festival all day!"], ["benny", "I was building a snow bunny with my friends."], ["olive", "Hoo! I was asleep. It's daytime!"]], 0,
+    "Mrs. Goose borrowed the trophy to use as a fancy cake stand! The festival gets its trophy back, plus a giant cake.");
+
+  C("The Missing Storybook", "Oakwood Library", "library", "day", "hoot",
+    [["c", "Hoo! The library's oldest storybook is missing from the shelf!"], ["d", "Every book leaves a trail. Let's check between the shelves."]],
+    [["page", "Torn page corner", null, 4], ["fur", "Soft grey fur", GREY_FUR, 3], ["cheese", "Cheese crumbs", null, 7], ["paw", "Tiny footprints", GREY_PAW, 10], ["scratch", "Nibble marks", null, 1]],
+    [["milo", "I-I only came to read the cheese cookbook!"], ["bruno", "Books are too small for my big paws."], ["dottie", "Quack! I was at the pond all day."]], 0,
+    "Milo was building a cozy reading nest out of the storybook pages! He's helping glue the book back together.");
+
+  C("The Sandcastle Smasher", "Sunny Beach", "beach", "day", "benny",
+    [["c", "I spent all morning on my sandcastle, and someone stomped it flat!"], ["d", "Footprints in the sand never lie. Let's investigate."]],
+    [["paw", "Giant paw print", "#7a4f2e", 2], ["honey", "Honey drip", null, 1], ["fur", "Brown fur", BROWN_FUR, 4], ["ticket", "Ice cream receipt", null, 3], ["seashell", "Crushed seashell", null, 6]],
+    [["bruno", "I was just... looking for honey under the sand."], ["milo", "I'm too tiny to squash a castle!"], ["hazel", "I was napping under the umbrella."]], 0,
+    "Bruno smelled a honey sandwich buried by the castle and dug right through it! He's building Benny an even bigger castle.");
+
+  C("The Sneaky Sock Thief", "Mrs. Goose's kitchen at night", "kitchen", "night", "goose",
+    [["c", "Every night one of my knitted socks disappears from the laundry basket!"], ["d", "A sock thief who strikes at night. Let's look around."]],
+    [["fur", "Grey striped fur", { color: "#9a95a6", striped: true }, 6], ["hand", "Tiny handprint", "#6e6878", 11], ["button", "Sock button", "#ff6f91", 4], ["crumbs", "Cookie crumbs", null, 3], ["scratch", "Claw marks on the basket", null, 9]],
+    [["rocco", "Socks? Why would I want socks? ...They are very cozy though."], ["milo", "My feet are too tiny for socks!"], ["pip", "I only chew slippers, not socks!"]], 0,
+    "Rocco was using the socks as cozy sleeping bags for his family! Mrs. Goose is knitting them their own.");
+
+  C("The Portrait Prankster", "City Art Museum", "museum", "a", "hoot",
+    [["c", "Hoo-hoo! Someone drew a silly mustache on our famous portrait!"], ["d", "An art prankster! Let's find who's holding the paint."]],
+    [["paint", "Black paint drips", "#3b3445", 3], ["fur", "Orange fur", ORANGE_FUR, 12], ["fur", "White-tipped tail fur", { color: ORANGE_FUR, tip: true }, 5], ["paw", "Pointy paw prints", "#a85a24", 8], ["ticket", "Paint shop receipt", null, 4]],
+    [["felix", "It's not a prank, it's... modern art!"], ["bruno", "I can't even hold a tiny paintbrush."], ["milo", "I was too scared to go near the portrait."]], 0,
+    "Felix thought the portrait looked bored and gave it a mustache! He's cleaning it off and painting his own portrait instead.");
+
+  C("The Honey Pot Heist", "Bruno's kitchen", "kitchen", "day", "bruno",
+    [["c", "My honey pot is empty! Every last drop is gone!"], ["d", "Sticky crimes leave sticky clues. Let's search."]],
+    [["honey", "Sticky honey trail", null, 8], ["fur", "Grey bushy fur", "#8d8a99", 2], ["acorn", "Honey-dipped acorn", null, 14], ["paw", "Small grey paw prints", "#6e6878", 5], ["shells", "Acorn shells", null, 4]],
+    [["nutmeg", "Honey? I only like nuts. And maybe a tiny bit of honey."], ["hazel", "My fur is golden, not grey! It wasn't me."], ["dottie", "Quack! I was at the pond."]], 0,
+    "Nutmeg dipped her acorns in honey to make sweet snacks! She's sharing her honey acorns with Bruno.");
+
+  C("The Missing Sunhat", "Sunny Beach at sunset", "beach", "sunset", "lop",
+    [["c", "My royal sunhat blew away... or did someone take it?"], ["d", "Let's search the beach before the sun goes down."]],
+    [["feather", "Grey feather", "#9aa3ad", 5], ["webbed", "Webbed footprint", "#ff9a2e", 6], ["crumbs", "Bread crumbs", null, 3], ["ticket", "Fish stall receipt", null, 11], ["seashell", "Shell from the hat", null, 2]],
+    [["gus", "Honk! I was just trying on hats. Is that a crime?"], ["pip", "I was digging for crabs all afternoon!"], ["milo", "A sunhat? I could sleep in a sunhat!"]], 0,
+    "Gus wanted to look fancy for the sunset and borrowed the sunhat! He's returning it with a bow on top.");
+
+  C("The Midnight Reader", "Oakwood Library at night", "library", "night", "hoot",
+    [["c", "Someone sneaks into the library at night and leaves snacks everywhere!"], ["d", "A midnight reader! Let's follow the crumbs."]],
+    [["seed", "Sunflower seeds", null, 4], ["fur", "White fluffy fur", "#f7f4ee", 6], ["paw", "Tiny pink paw prints", "#ff9fb8", 7], ["page", "Folded page corner", null, 1], ["shells", "Seed shells", null, 10]],
+    [["ziggy", "I just wanted to finish my adventure book!"], ["rocco", "I can't read in the dark. My mask makes it extra dark!"], ["bruno", "Libraries are too quiet for my snoring."]], 0,
+    "Ziggy was so excited about a hamster adventure book that she read all night! Now she has her own library card.");
+
+  C("The Golden Key", "City Art Museum", "museum", "a", "hoot",
+    [["c", "The golden key to the museum vault has gone missing!"], ["d", "A missing key is a big deal. Let's get to work."]],
+    [["feather", "Silver-grey feather", "#b4b8c2", 1], ["scratch", "Talon scratches", null, 9], ["leaf", "Pine needles", "#2f8a3a", 12], ["ticket", "Night bus ticket", null, 4], ["seed", "Pine seeds", null, 11]],
+    [["sage", "I only came to admire the shiny... I mean, the art."], ["rocco", "I've been good all week! Ask anyone!"], ["hazel", "Keys are too heavy for me to carry."]], 0,
+    "Sage thought the golden key was a shiny toy and took it to her nest! The vault key is back on its hook.");
+
+  C("The Flower Show Flop", "Willow Park", "park", "summer", "goose",
+    [["c", "My prize roses were dug up the night before the flower show!"], ["d", "Digging leaves dirt behind. Let's look closely."]],
+    [["petal", "Rose petals", "#ff6f91", 8], ["paw", "Muddy paw prints", "#6e6878", 5], ["fur", "Grey spotted fur", "#a7a3af", 12], ["bone", "Buried bone", null, 9], ["scratch", "Claw marks on the fence", null, 11]],
+    [["pepper", "Woof! I was just looking for my bone... in the roses."], ["hazel", "Roses? I'm allergic to roses!"], ["dottie", "Quack! I was swimming all night."]], 0,
+    "Pepper buried his bone in the rose bed and dug up every flower to find it! He's helping replant the roses.");
+
+  C("The Cherry Pie Thief", "Mrs. Goose's kitchen", "kitchen", "day", "goose",
+    [["c", "I left a cherry pie cooling by the window, and now it's gone!"], ["d", "Cherry pie leaves a cherry trail. Let's find it."]],
+    [["paint", "Cherry juice drops", "#c2405e", 1], ["fur", "Thick white fur", WHITE, 7], ["paw", "Giant white paw print", "#c7d2e0", 6], ["crumbs", "Pie crust crumbs", null, 3], ["leaf", "Cherry leaf", "#3cb44a", 9]],
+    [["polly", "I'm visiting from the north! I just smelled something sweet..."], ["milo", "A whole pie? That's bigger than me!"], ["dottie", "Quack! I don't even like cherries."]], 0,
+    "Polly had never tasted cherry pie and couldn't stop at one bite! She's baking Mrs. Goose a new pie in return.");
+
+  C("The Lost Treasure Map", "Sunny Beach", "beach", "day", "dottie",
+    [["c", "Quack! My treasure map was right here on my towel. Now it's gone!"], ["d", "A treasure hunt for a treasure map! Let's dig in."]],
+    [["page", "Torn map corner", null, 6], ["fur", "Dark red fur", "#c0392b", 1], ["fur", "White-tipped fur", { color: "#c0392b", tip: true }, 8], ["paw", "Pointy paw prints", "#8b3a1e", 5], ["ticket", "Boat ticket", null, 4]],
+    [["ruby", "I wasn't going to dig up the treasure! ...Not without you, anyway."], ["benny", "I was busy with my carrot sandwich."], ["hazel", "I can't even carry a map, it's huge!"]], 0,
+    "Ruby wanted to find the treasure first to surprise everyone. They followed the map together and found a chest of seashells!");
+
+  C("The Clock Stopper", "Hazel's kitchen at night", "kitchen", "night", "hazel",
+    [["c", "Someone stopped the kitchen clock at midnight! Now everyone overslept!"], ["d", "Time to find out who messed with time."]],
+    [["fur", "Brown bunny fur", "#a9744f", 9], ["carrot", "Carrot crumbs", null, 3], ["paw", "Big hoppy footprints", "#6e4a32", 12], ["leaf", "Clover leaf", "#3cb44a", 5], ["scratch", "Scratches near the clock", null, 11]],
+    [["coco", "The ticking kept me awake, so I just... gave it a rest."], ["bruno", "I sleep all winter. I don't need clocks!"], ["dottie", "Quack! I wake up with the sun."]], 0,
+    "The loud ticking kept Coco awake, so she stopped the clock! Now she sleeps with earmuffs, and the clock ticks again.");
+
+  C("The Royal Diary", "Royal Gallery", "museum", "b", "lop",
+    [["c", "The Queen's royal diary is missing from the gallery!"], ["d", "A missing diary full of secrets. Let's investigate."]],
+    [["feather", "Brown feather", "#a47a52", 1], ["glasses", "Tiny reading glasses", null, 6], ["page", "Page of notes", null, 4], ["scratch", "Talon marks", null, 8], ["ticket", "Library card", null, 11]],
+    [["hoot", "I am a professor. I only... borrow things for research."], ["polly", "I can't read old handwriting."], ["coco", "Diaries are private! I'd never peek."]], 0,
+    "Professor Hoot borrowed the diary to study royal history and forgot to ask! He's giving a free history talk to say sorry.");
+
+  C("The Lemonade Mystery", "Willow Park", "park", "summer", "benny",
+    [["c", "Someone drank all the lemonade at our picnic!"], ["d", "A thirsty thief! Let's follow the sticky drips."]],
+    [["acorn", "Dropped acorn", null, 2], ["fur", "Red bushy fur", "#c8643a", 1], ["paint", "Lemonade drips", "#ffe066", 8], ["paw", "Small paw prints", "#7a3f22", 5], ["shells", "Acorn shells", null, 9]],
+    [["suki", "I was thirsty after gathering acorns, that's all!"], ["bruno", "I only drink honey water."], ["milo", "A whole jug? I'd float away!"]], 0,
+    "Suki got thirsty while gathering acorns and drank it all! She's making a fresh jug of acorn lemonade. Yum?");
+
+  C("The Fish Food Fiasco", "Hazel's kitchen", "kitchen", "day", "hazel",
+    [["c", "My goldfish food box is empty, and my fish is hungry!"], ["d", "A hungry fish needs answers. Let's search."]],
+    [["crumbs", "Fish flakes", null, 8], ["feather", "Yellow feather", "#ffd43b", 11], ["webbed", "Webbed footprint", "#ff9a2e", 6], ["paint", "Water splash", "#5ec4ff", 4], ["ticket", "Pond pass", null, 2]],
+    [["dottie", "Quack! Fish food is basically duck food. Isn't it?"], ["milo", "I only eat cheese!"], ["coco", "I was in the garden all day."]], 0,
+    "Dottie mistook the fish food for a fancy snack! She's buying a new box, and the goldfish got an extra treat.");
+
+  C("The Library Ghost", "Oakwood Library at night", "library", "night", "hoot",
+    [["c", "Hoo! Visitors saw a big white ghost floating between the shelves!"], ["d", "Ghosts aren't real. But big white footprints are."]],
+    [["fur", "White fur", WHITE, 6], ["paw", "Giant white paw print", "#c7d2e0", 7], ["bone", "Fish bone", null, 4], ["page", "Ghost story page", null, 9], ["scratch", "Claw marks on a shelf", null, 2]],
+    [["polly", "Boo! Oops, I mean... hello. I was reading ghost stories."], ["rocco", "Ghosts? I'm scared of ghosts!"], ["hazel", "I'm much too small to be a big ghost."]], 0,
+    "The ghost was Polly wrapped in a white blanket, reading ghost stories by moonlight! Now the library hosts a spooky story night.");
+
+  C("The Seashell Collection", "Sunny Beach", "beach", "day", "suki",
+    [["c", "My seashell collection vanished while I was swimming!"], ["d", "Shells on a beach are easy to hide. Let's look carefully."]],
+    [["hand", "Tiny wet handprints", "#6e6878", 1], ["fur", "Grey striped fur", { color: "#9a95a6", striped: true }, 12], ["seashell", "Dropped seashell", null, 3], ["paint", "Wet sand puddle", "#5ec4ff", 10], ["crumbs", "Snack crumbs", null, 9]],
+    [["rocco", "I only washed them! Raccoons love washing things!"], ["pepper", "Woof! I was chasing seagulls."], ["ziggy", "Shells are too heavy for a hamster."]], 0,
+    "Rocco couldn't resist washing the shiny shells in the sea! He's giving them back sparkling clean.");
+
+  C("The Present Peeker", "Coco's birthday party", "kitchen", "party", "coco",
+    [["c", "Someone opened my birthday presents before the party!"], ["d", "A present peeker! Let's unwrap this mystery."]],
+    [["page", "Torn wrapping paper", null, 3], ["fur", "Grey spotted fur", "#a7a3af", 4], ["paw", "Grey paw prints", "#6e6878", 5], ["ball", "Squeaky ball", null, 6], ["button", "Collar tag", "#4dc3ff", 9]],
+    [["pepper", "I just wanted to see if one was a ball! ...One was a ball."], ["olive", "Hoo! I don't do parties in the daytime."], ["nutmeg", "I was decorating the cake with nuts."]], 0,
+    "Pepper couldn't wait to see what was inside! He's wrapping the presents again with extra bows.");
+
+  C("The Muddy Gallery", "City Art Museum", "museum", "a", "hoot",
+    [["c", "Hoo! Muddy footprints all over our clean gallery floor!"], ["d", "Let's follow these muddy prints to their owner."]],
+    [["webbed", "Muddy webbed footprint", "#7a4f2e", 8], ["feather", "Grey feather", "#9aa3ad", 4], ["paint", "Mud splash", "#8b5a2b", 11], ["crumbs", "Bread crumbs", null, 7], ["leaf", "Pond weed", "#3cb95a", 12]],
+    [["gus", "Honk! I wiped my feet! ...On the paintings? No, no."], ["felix", "My paws are perfectly clean today."], ["milo", "My footprints are tiny, not big and floppy."]], 0,
+    "Gus came straight from the pond to see the new exhibit! He's helping mop the floors.");
+
+  C("The Pumpkin Nibbler", "Willow Park in autumn", "park", "autumn", "bruno",
+    [["c", "My giant pumpkin for the autumn fair has big bites taken out of it!"], ["d", "Big bites mean a big appetite. Let's investigate."]],
+    [["seed", "Pumpkin seeds", null, 8], ["fur", "Fluffy white fur", WHITE, 1], ["paw", "Big hoppy footprints", "#9a8fb0", 5], ["carrot", "Carrot top", null, 9], ["leaf", "Pumpkin vine leaf", "#e8892e", 3]],
+    [["benny", "Pumpkins are just big orange carrots, right?"], ["ruby", "Foxes don't eat pumpkins!"], ["hazel", "My cheeks could never fit a pumpkin!"]], 0,
+    "Benny thought the pumpkin was a giant carrot! He's growing Bruno a new pumpkin in his garden.");
+
+  C("The Acorn Bookmarks", "Oakwood Library", "library", "day", "hoot",
+    [["c", "Hoo! Someone stuffed acorns inside every book on the shelf!"], ["d", "Acorns in books? That's a nutty mystery."]],
+    [["acorn", "Acorn in a book", null, 4], ["fur", "Grey bushy fur", "#8d8a99", 3], ["shells", "Acorn shells", null, 7], ["paw", "Small grey paw prints", "#6e6878", 10], ["page", "Nibbled bookmark", null, 9]],
+    [["nutmeg", "Books make great acorn storage! So cozy and dry."], ["coco", "I was reading a carrot cookbook all day."], ["polly", "I don't even like nuts."]], 0,
+    "Nutmeg thought the books were perfect hiding spots for her winter acorns! She's moving them to a proper acorn cupboard.");
+
+  C("The Runaway Beach Ball", "Sunny Beach", "beach", "day", "dottie",
+    [["c", "Quack! My big beach ball rolled away... with someone inside it!"], ["d", "Someone inside a ball? This I have to see."]],
+    [["fur", "Golden fur", "#f0b45c", 4], ["seed", "Sunflower seeds", null, 1], ["paw", "Tiny pink paw prints", "#ff9fb8", 6], ["scratch", "Tiny teeth marks", null, 3], ["shells", "Seed shells", null, 9]],
+    [["hazel", "It was just like my exercise ball at home, only bigger!"], ["gus", "Honk! I was sunbathing."], ["pepper", "Woof! I would have brought it back!"]], 0,
+    "Hazel crawled inside the beach ball and rolled all over the beach! It's back now, and she's getting her own giant hamster ball.");
+
+  C("The Midnight Snack Attack", "Pip's kitchen at night", "kitchen", "night", "pip",
+    [["c", "Woof! My sausages disappeared from the fridge last night!"], ["d", "A fridge raider! Let's check the scene."]],
+    [["fur", "Dark red fur", "#c0392b", 7], ["fur", "White-tipped fur", { color: "#c0392b", tip: true }, 4], ["paw", "Pointy paw prints", "#8b3a1e", 6], ["crumbs", "Sausage crumbs", null, 3], ["scratch", "Scratches on the fridge", null, 11]],
+    [["ruby", "I was just... checking that the fridge was cold."], ["milo", "Sausages are too big for me!"], ["coco", "I'm a vegetarian bunny!"]], 0,
+    "Ruby smelled the sausages from the street and couldn't resist! She's cooking Pip a big breakfast to make up for it.");
+
+  C("The Royal Spoons", "Royal Gallery", "museum", "b", "lop",
+    [["c", "The royal silver spoons have vanished from their display!"], ["d", "Shiny things attract certain collectors. Let's investigate."]],
+    [["feather", "Brown feather", "#8d6b4a", 3], ["scratch", "Talon scratches", null, 4], ["leaf", "Oak leaf", "#6fbf4a", 12], ["ticket", "Night bus ticket", null, 6], ["button", "Shiny button", "#dfe6ee", 9]],
+    [["olive", "Hoo... I only borrowed them to decorate my nest. Again."], ["rocco", "I'd never take spoons! Forks maybe. No! Not forks either."], ["coco", "Spoons? I eat carrots with my paws."]], 0,
+    "Olive couldn't resist the shiny spoons for her nest, again! This time she's getting her own shiny wind chime.");
+
+  C("The Kite Catastrophe", "Willow Park", "park", "summer", "pip",
+    [["c", "Woof! My kite got stuck in the tree, and now it's gone!"], ["d", "A kite thief in the treetops? Let's look up and down."]],
+    [["feather", "Grey feather", "#9aa3ad", 2], ["webbed", "Webbed footprint", "#ff9a2e", 5], ["page", "Torn kite paper", null, 3], ["crumbs", "Bread crumbs", null, 8], ["ticket", "Pond ticket", null, 7]],
+    [["gus", "Honk! I was flying too! The kite was in my way."], ["suki", "Kites don't grow on trees. Well, sometimes."], ["bruno", "I can't climb that high anymore."]], 0,
+    "Gus flew right into the kite and carried it off on his wing! He's helping Pip fly it, from a safe distance.");
+
+  C("The Pearl Necklace", "Sunny Beach at sunset", "beach", "sunset", "goose",
+    [["c", "My pearl necklace was right here on my beach towel!"], ["d", "Pearls in the sand... let's search before the tide comes in."]],
+    [["fur", "Grey spotted fur", "#a7a3af", 6], ["paw", "Grey paw prints", "#6e6878", 2], ["ball", "Sandy tennis ball", null, 9], ["bone", "Chew bone", null, 1], ["seashell", "Dug-up seashell", null, 10]],
+    [["pepper", "Woof! I buried it to keep it safe! ...Then I forgot where."], ["ziggy", "Pearls are as big as my head!"], ["sage", "Hoo... I only fly at night."]], 0,
+    "Pepper buried the necklace to keep it safe, then forgot where! They found it together with a big dig.");
+
+  C("The Flour Footprints", "Mrs. Goose's kitchen", "kitchen", "day", "goose",
+    [["c", "Somebody broke into my pantry and left flour everywhere!"], ["d", "Floury footprints! This trail will be easy to follow."]],
+    [["paw", "Floury footprints", "#f4efe6", 5], ["carrot", "Grated carrot", null, 8], ["fur", "Brown bunny fur", "#a9744f", 4], ["paint", "Spilled flour", "#f8f4ea", 3], ["leaf", "Clover leaf", "#3cb44a", 9]],
+    [["coco", "I was baking carrot cake for everyone! It was meant to be a surprise."], ["polly", "My paws are much too big for those little prints."], ["nutmeg", "I was out collecting acorns."]], 0,
+    "Coco was secretly baking carrot cakes for the whole town! The surprise is out, but the cake is delicious.");
+
+  C("The Inky Accident", "Oakwood Library", "library", "day", "hoot",
+    [["c", "Hoo! Someone knocked the ink pot over onto our rarest book!"], ["d", "Inky paw prints! Our culprit left a trail."]],
+    [["fur", "White fluffy fur", "#f7f4ee", 2], ["seed", "Sunflower seeds", null, 9], ["paint", "Ink spill", "#2f4b9a", 4], ["paw", "Tiny inky paw prints", "#2f4b9a", 7], ["shells", "Seed shells", null, 11]],
+    [["ziggy", "I just wanted to write my name in the book... very small."], ["bruno", "My paws would make giant ink prints, not tiny ones."], ["gus", "Honk! Geese don't write."]], 0,
+    "Ziggy wanted to sign her name in the famous book and tipped the ink! She's learning fancy handwriting instead.");
+
+  C("The Frozen Pond Doodles", "Willow Park in winter", "park", "winter", "dottie",
+    [["c", "Quack! Someone carved giant doodles all over the frozen pond!"], ["d", "An ice artist! Let's track them down."]],
+    [["fur", "Orange fur", ORANGE_FUR, 1], ["fur", "White-tipped fur", { color: ORANGE_FUR, tip: true }, 7], ["paw", "Pointy paw prints", "#a85a24", 10], ["paint", "Orange paint on the ice", ORANGE_FUR, 6], ["ticket", "Skate rental ticket", null, 3]],
+    [["felix", "They're not doodles, they're ice sculptures!"], ["milo", "I can't skate. I'd slip right over!"], ["polly", "I was ice fishing up north."]], 0,
+    "Felix turned the frozen pond into his art canvas! Everyone loved it, so now it's the Winter Art Show.");
+
+  C("The Moving Statue", "Royal Gallery", "museum", "b", "lop",
+    [["c", "Visitors say the new bear statue keeps moving when no one is looking!"], ["d", "A moving statue? Let's take a closer look."]],
+    [["honey", "Honey drips", null, 4], ["fur", "Brown fur", BROWN_FUR, 6], ["paw", "Giant paw print", "#7a4f2e", 7], ["ticket", "Honey exhibit flyer", null, 1], ["leaf", "Forest leaf", "#3cb95a", 12]],
+    [["bruno", "I'm a very good statue. I only moved a little. For snacks."], ["olive", "I was here, but I was perfectly still too."], ["nutmeg", "I'm too small to be a statue."]], 0,
+    "There was no statue! It was Bruno, posing to sneak into the honey art exhibit for free. He's bought a proper ticket now.");
+
+  C("The Cake Collapse", "Pip's birthday party", "kitchen", "party", "pip",
+    [["c", "Woof! My party cake collapsed right before we cut it!"], ["d", "Cakes don't fall by themselves. Something dug in."]],
+    [["cheese", "Cheese crumbs", null, 3], ["fur", "Soft grey fur", GREY_FUR, 7], ["paw", "Tiny grey footprints", GREY_PAW, 5], ["crumbs", "Cake crumbs", null, 4], ["scratch", "A tiny tunnel", null, 8]],
+    [["milo", "I-I just made a tiny tunnel to find the cheese layer!"], ["benny", "I was blowing up balloons."], ["ruby", "I was at the door, greeting guests."]], 0,
+    "Milo tunnelled into the cake looking for a cheese layer! Next year, Pip promises a cheesecake.");
+
+  C("The Quiet Room Racket", "Oakwood Library", "library", "day", "hoot",
+    [["c", "Hoo! Someone keeps honking in the quiet reading room!"], ["d", "A noisy mystery in the quietest place in town!"]],
+    [["feather", "White feather", "#fbfbfb", 2], ["webbed", "Webbed footprint", "#ff9a2e", 7], ["crumbs", "Bread crumbs", null, 4], ["ticket", "Choir ticket", null, 9], ["page", "Song sheet", null, 10]],
+    [["goose", "I was only practising for the choir concert! Quietly. Mostly."], ["hazel", "Hamsters squeak, they don't honk."], ["pepper", "Woof! I only bark... oops, sorry."]], 0,
+    "Mrs. Goose was practising her choir song between the bookshelves! The library now has a singing room just for her.");
+
+  C("The Sand Festival Treasure", "Sunny Beach at sunset", "beach", "sunset", "bruno",
+    [["c", "The treasure chest from the sand festival is empty!"], ["d", "Gold coins shine at sunset. Let's look for a shiny trail."]],
+    [["feather", "Silver-grey feather", "#b4b8c2", 1], ["scratch", "Talon scratches", null, 4], ["seashell", "Seashell", null, 6], ["ticket", "Lighthouse ticket", null, 11], ["button", "Gold coin", "#ffc21a", 8]],
+    [["sage", "Hoo... the coins looked like little moons. I took them to my tree."], ["gus", "Honk! I was racing the waves."], ["coco", "I'd rather have carrots than coins."]], 0,
+    "Sage thought the gold coins looked like tiny moons and took them home! She's hosting a stargazing night to say sorry.");
+
+  C("The Leaf Pile Puzzle", "Willow Park in autumn", "park", "autumn", "bruno",
+    [["c", "I raked the leaves into perfect piles, and someone scattered them everywhere!"], ["d", "Leaves don't jump by themselves. Let's find our jumper."]],
+    [["fur", "Grey spotted fur", "#a7a3af", 1], ["paw", "Grey paw prints", "#6e6878", 9], ["ball", "Squeaky ball", null, 5], ["bone", "Chew bone", null, 3], ["leaf", "Scattered leaves", "#f08a32", 12]],
+    [["pepper", "Woof! Leaf piles are made for jumping! Everyone knows that."], ["olive", "Hoo! I was sleeping in my tree."], ["ziggy", "I'd get lost in a leaf pile!"]], 0,
+    "Pepper couldn't resist jumping into every pile! Now he's helping Bruno rake, and they jumped in the last pile together.");
+
+  C("The Snow Fort Smash", "Willow Park in winter", "park", "winter", "coco",
+    [["c", "My snow fort was squashed flat overnight!"], ["d", "Something big and heavy was here. Let's look at the tracks."]],
+    [["fur", "Thick white fur", WHITE, 4], ["paw", "Giant white paw print", "#c7d2e0", 10], ["bone", "Fish bone", null, 9], ["scratch", "Claw marks in the snow", null, 6], ["ticket", "Ice fishing ticket", null, 3]],
+    [["polly", "I only sat on it for a nap. Snow is my favourite bed!"], ["milo", "My fort is the size of a teacup!"], ["hoot", "I was marking homework all night."]], 0,
+    "Polly found the snow fort so cozy that she curled up and squashed it! She's building Coco an even bigger one.");
+
+  C("The Fake Painting", "City Art Museum", "museum", "a", "hoot",
+    [["c", "Hoo! Our sunflower painting looks... different. I think it's a fake!"], ["d", "A fake painting? Let's look for the real artist."]],
+    [["fur", "Dark red fur", "#c0392b", 3], ["fur", "White-tipped fur", { color: "#c0392b", tip: true }, 5], ["paw", "Pointy paw prints", "#8b3a1e", 8], ["paint", "Wet green paint", "#3ccf9a", 12], ["ticket", "Art class ticket", null, 4]],
+    [["ruby", "I just wanted to study the painting up close. At home."], ["hazel", "I can't even reach the frame!"], ["gus", "Honk! Paintings are boring. No offence."]], 0,
+    "Ruby swapped in her own copy to study the real painting at home! The original is back, and her copy is going in the gift shop.");
+
+  C("The Midnight Lamps", "Oakwood Library at night", "library", "night", "hoot",
+    [["c", "Hoo! The library lamps keep switching on in the middle of the night!"], ["d", "Someone wants light at night. Let's find out who."]],
+    [["feather", "Yellow feather", "#ffd43b", 1], ["webbed", "Webbed footprint", "#ff9a2e", 7], ["crumbs", "Bread crumbs", null, 4], ["page", "Spooky story page", null, 9], ["ticket", "Pond pass", null, 12]],
+    [["dottie", "Quack... I get a little scared of the dark when I read spooky books."], ["olive", "Owls like the dark. I'd turn the lights off!"], ["milo", "I can't even reach the light switch."]], 0,
+    "Dottie was reading spooky books at night and got scared of the dark! The library gave her a cute night-light.");
+
+  C("The Vanishing Town", "Detective Paws' kitchen", "kitchen", "party", "hazel",
+    [["c", "Detective! Everyone in town has vanished! The streets are empty!"], ["d", "The whole town? This is my biggest case yet."]],
+    [["balloon", "Party balloon scrap", "#8a63ff", 8], ["crumbs", "Cake crumbs", null, 3], ["fur", "Soft cream fur", "#e8d3c0", 4], ["paw", "Royal footprints", "#c9a58a", 5], ["ticket", "Secret invitation", null, 2]],
+    [["lop", "A queen never tells her secrets."], ["pip", "Woof! I don't know anything about a p-party!"], ["hoot", "Hoo... I was wrapping something. A book. For no reason."]], 0,
+    "SURPRISE! Lady Lop threw a party for Detective Paws' 50th case, and the whole town was hiding in the kitchen! Thank you for playing, Detective!");
+
+  // Cases 2-6 were placed by hand on the old drawings; move their clues onto the painted scenes.
+  [[2, "museum_a", [14, 13, 6, 8, 4]], [3, "park", [8, 3, 1, 6, 7]], [4, "kitchen_day", [12, 8, 2, 6, 4]], [5, "museum_b", [4, 2, 5, 7, 3]], [6, "park", [9, 1, 5, 7, 10]]]
+    .forEach(([id, sp, picks]) => CASES[id - 1].clues.forEach((cl, i) => { cl.x = SPOTS[sp][picks[i] - 1][0]; cl.y = SPOTS[sp][picks[i] - 1][1]; }));
+  // Put the culprit in a different lineup position from case to case.
+  CASES.forEach(cs => {
+    const g = cs.suspects.splice(cs.culprit, 1)[0], pos = (cs.id * 2 + 1) % 3;
+    cs.suspects.splice(pos, 0, g); cs.culprit = pos;
+  });
+
+  // ================= SCENES =================
+  function drawScene(c, cs, t) {
+    c.save(); c.translate(0, TOP);
+    c.beginPath(); c.rect(0, 0, W, SH); c.clip();
+    const bk = BACKDROPS[backdropKey(cs)];
+    if (bk && bk.ready) paintedScene(c, t, backdropKey(cs));
+    else if (cs.scene === "kitchen") { kitchen(c, t, cs.variant); if (cs.variant === "party") party(c, t); }
+    else if (cs.scene === "museum") museum(c, t, cs.variant);
+    else if (cs.scene === "library") library(c, t, cs.variant);
+    else if (cs.scene === "beach") beach(c, t, cs.variant);
+    else if (cs.variant === "winter" || cs.variant === "festival") winterPark(c, t, cs.variant);
+    else park(c, t, cs.variant);
+    c.restore();
+  }
+
+  function kitchen(c, t, v) {
+    const night = v === "night";
+    c.fillStyle = night ? "#c9b8e6" : "#ffe7cf"; c.fillRect(0, 0, W, 380);
+    c.fillStyle = night ? "#bba6dc" : "#ffd6b0";
+    for (let y = 18; y < 370; y += 34) for (let x = (y / 34) % 2 ? 26 : 8; x < W; x += 36) { circ(c, x, y, 4); c.fill(); }
+    // floor tiles
+    for (let row = 0; row < 5; row++) for (let col = 0; col < 10; col++) {
+      c.fillStyle = (row + col) % 2 ? (night ? "#8f86b8" : "#f2c9a5") : (night ? "#a79ccc" : "#fff3e0");
+      c.fillRect(col * 36, 380 + row * 28, 36, 28);
+    }
+    c.fillStyle = night ? "#6d5f9c" : "#e2a878"; c.fillRect(0, 372, W, 10);
+    // window
+    rr(c, 34, 50, 124, 112, 6); fs(c, "#fff");
+    const sky = c.createLinearGradient(0, 56, 0, 156);
+    if (night) { sky.addColorStop(0, "#1d1a4a"); sky.addColorStop(1, "#4b3f8c"); } else { sky.addColorStop(0, "#7fd0ff"); sky.addColorStop(1, "#d8f3ff"); }
+    rr(c, 42, 58, 108, 96, 3); c.fillStyle = sky; c.fill();
+    if (night) { circ(c, 120, 82, 12); c.fillStyle = "#fff6c2"; c.fill(); circ(c, 126, 78, 10); c.fillStyle = "#1d1a4a"; c.fill();
+      for (let i = 0; i < 6; i++) { const tw = 0.5 + 0.5 * Math.sin(t * 3 + i * 2); c.globalAlpha = tw; star(c, 52 + i * 16, 70 + (i % 3) * 18, 3, "#fff6c2"); } c.globalAlpha = 1; }
+    else { c.save(); c.translate(150, 70); c.rotate(Math.sin(t * 1.3) * 0.08);
+      c.beginPath(); c.moveTo(0, 0); c.lineTo(-50, 22); c.lineWidth = 5; c.strokeStyle = "#8b5a2b"; c.stroke();
+      blob(c, [[-30, 14, 10], [-46, 22, 9], [-18, 8, 8]], "#5cc74a", 1.5); c.restore(); }
+    c.strokeStyle = INK; c.lineWidth = 3; c.beginPath(); c.moveTo(96, 58); c.lineTo(96, 154); c.moveTo(42, 106); c.lineTo(150, 106); c.stroke();
+    rr(c, 26, 158, 140, 12, 4); fs(c, "#fff");
+    // curtains
+    const sw = Math.sin(t * 1.4) * 5;
+    [[34, 1], [158, -1]].forEach(([x, s]) => {
+      c.beginPath(); c.moveTo(x, 44); c.lineTo(x + s * 34, 44); c.quadraticCurveTo(x + s * 22 + sw * s, 100, x + s * 10 + sw, 150);
+      c.quadraticCurveTo(x + s * 4, 150, x - s * 6, 152); c.closePath(); fs(c, night ? "#7e6bd1" : "#ff8fab");
+    });
+    rr(c, 24, 38, 144, 9, 4); fs(c, "#b06a3c");
+    // clock + pendulum
+    const pa = Math.sin(t * 3) * 0.35;
+    c.save(); c.translate(292, 98); c.rotate(pa); c.beginPath(); c.moveTo(0, 0); c.lineTo(0, 36); c.lineWidth = 2; c.strokeStyle = INK; c.stroke(); circ(c, 0, 40, 7); fs(c, "#ffc94d", 2); c.restore();
+    rr(c, 276, 86, 32, 12, 3); fs(c, "#b06a3c", 2);
+    circ(c, 292, 60, 28); fs(c, "#b06a3c"); circ(c, 292, 60, 22); fs(c, "#fff", 2);
+    c.save(); c.translate(292, 60); c.rotate(t * 0.5); c.beginPath(); c.moveTo(0, 0); c.lineTo(0, -17); c.lineWidth = 2.5; c.strokeStyle = INK; c.stroke(); c.restore();
+    c.save(); c.translate(292, 60); c.rotate(t * 0.04 + 2); c.beginPath(); c.moveTo(0, 0); c.lineTo(0, -11); c.lineWidth = 3.5; c.strokeStyle = INK; c.stroke(); c.restore();
+    // shelf + jars
+    rr(c, 190, 148, 96, 8, 3); fs(c, "#b06a3c");
+    rr(c, 198, 112, 24, 36, 6); fs(c, "rgba(220,240,255,0.7)"); circ(c, 210, 134, 5); c.fillStyle = "#ff8a2e"; c.fill(); rr(c, 196, 106, 28, 8, 3); fs(c, "#ff6f91", 2);
+    rr(c, 228, 118, 28, 30, 6); fs(c, "rgba(220,240,255,0.7)"); rr(c, 226, 112, 32, 8, 3); fs(c, "#3ccf9a", 2);
+    rr(c, 262, 122, 18, 26, 5); fs(c, "#ffd34d");
+    // fridge
+    rr(c, 292, 160, 62, 216, 10); fs(c, night ? "#bfe8dc" : "#d6f5ec");
+    c.beginPath(); c.moveTo(292, 238); c.lineTo(354, 238); c.lineWidth = 3; c.strokeStyle = INK; c.stroke();
+    rr(c, 298, 196, 6, 28, 3); fs(c, "#fff", 2); rr(c, 298, 252, 6, 36, 3); fs(c, "#fff", 2);
+    circ(c, 336, 182, 6); fs(c, "#ff6f91", 2); star(c, 322, 210, 6, "#ffd34d");
+    // counter + stove
+    rr(c, 170, 240, 116, 136, 6); fs(c, night ? "#8a76c9" : "#ffb37a");
+    rr(c, 166, 232, 124, 12, 4); fs(c, "#fff");
+    rr(c, 182, 262, 40, 50, 5); fs(c, shade(night ? "#8a76c9" : "#ffb37a", -0.06), 2); rr(c, 232, 262, 40, 50, 5); fs(c, shade(night ? "#8a76c9" : "#ffb37a", -0.06), 2);
+    circ(c, 214, 288, 3); fs(c, "#fff", 1.5); circ(c, 240, 288, 3); fs(c, "#fff", 1.5);
+    // pot + steam
+    rr(c, 188, 206, 48, 28, 8); fs(c, "#8fa3c4"); rr(c, 184, 202, 56, 8, 4); fs(c, "#a8bbd8");
+    for (let i = 0; i < 3; i++) {
+      const p = (t * 0.5 + i / 3) % 1;
+      c.globalAlpha = (1 - p) * 0.7; circ(c, 212 + Math.sin(t * 2 + i * 2) * 6, 196 - p * 60, 6 + p * 8); c.fillStyle = "#fff"; c.fill();
+    }
+    c.globalAlpha = 1;
+    // trash can (tipped in day variant)
+    if (v === "day") { c.save(); c.translate(66, 470); c.rotate(-1.35); rr(c, -22, -40, 44, 50, 6); fs(c, "#8fa3c4"); rr(c, -26, -46, 52, 10, 4); fs(c, "#a8bbd8"); c.restore();
+      [[100, 486], [116, 474]].forEach(([x, y]) => { ell(c, x, y, 7, 4); fs(c, "#a5d68f", 1.5); }); }
+    else { rr(c, 46, 418, 44, 58, 6); fs(c, "#8fa3c4"); rr(c, 42, 410, 52, 10, 4); fs(c, "#a8bbd8"); }
+    // table
+    rr(c, 70, 340, 10, 70, 3); fs(c, "#8b5a2b"); rr(c, 176, 340, 10, 70, 3); fs(c, "#8b5a2b");
+    rr(c, 54, 326, 148, 22, 8); fs(c, "#fff");
+    c.save(); rr(c, 54, 326, 148, 30, 8); c.clip(); c.fillStyle = "#ff6f91"; for (let i = 0; i < 9; i++) c.fillRect(54 + i * 18, 326, 9, 30); c.restore();
+    rr(c, 54, 326, 148, 30, 8); fs(c, null);
+    ell(c, 120, 322, 30, 7); fs(c, "#fff"); rr(c, 116, 322, 8, 10, 2); fs(c, "#fff", 2);
+    // pet bowl + rug
+    ell(c, 214, 478, 92, 20); fs(c, night ? "#6aa4d8" : "#7cc6ff", 2);
+    c.save(); ell(c, 214, 478, 92, 20); c.clip(); c.strokeStyle = "rgba(255,255,255,0.6)"; c.lineWidth = 3; ell(c, 214, 478, 70, 14); c.stroke(); c.restore();
+    rr(c, 248, 440, 34, 16, 8); fs(c, "#ff6f91");
+    // mouse hole (night)
+    if (night) { c.beginPath(); c.moveTo(20, 372); c.lineTo(20, 352); c.arc(34, 352, 14, Math.PI, 0); c.lineTo(48, 372); c.closePath(); fs(c, "#2a2250", 2); }
+    // buzzing fly
+    const fx = 120 + Math.sin(t * 1.7) * 60 + Math.sin(t * 5.3) * 8, fy = 230 + Math.sin(t * 2.3) * 40;
+    circ(c, fx, fy, 3); c.fillStyle = INK; c.fill(); c.globalAlpha = 0.6; ell(c, fx - 3, fy - 4, 3, 2, Math.sin(t * 60)); ell(c, fx + 3, fy - 4, 3, 2, -Math.sin(t * 60)); c.fillStyle = "#fff"; c.fill(); c.globalAlpha = 1;
+    if (night) { const g = c.createRadialGradient(100, 120, 20, 180, 260, 420); g.addColorStop(0, "rgba(255,240,180,0)"); g.addColorStop(1, "rgba(30,20,70,0.35)"); c.fillStyle = g; c.fillRect(0, 0, W, SH); }
+  }
+
+  function museum(c, t, v) {
+    const wall = v === "b" ? "#d9ecff" : "#efe6ff";
+    c.fillStyle = wall; c.fillRect(0, 0, W, 390);
+    c.fillStyle = shade(wall, -0.04); for (let x = 0; x < W; x += 40) c.fillRect(x, 0, 20, 390);
+    // parquet
+    c.fillStyle = "#c69c6d"; c.fillRect(0, 390, W, 130);
+    c.strokeStyle = "rgba(110,70,30,0.35)"; c.lineWidth = 2;
+    for (let y = 390; y < 520; y += 22) { c.beginPath(); c.moveTo(0, y); c.lineTo(W, y); c.stroke(); for (let x = ((y / 22) % 2) * 30; x < W; x += 60) { c.beginPath(); c.moveTo(x, y); c.lineTo(x, y + 22); c.stroke(); } }
+    c.fillStyle = "#8a5d39"; c.fillRect(0, 384, W, 8);
+    // columns
+    [0, 334].forEach(x => { c.fillStyle = "#fff"; c.fillRect(x, 0, 26, 386); c.strokeStyle = "rgba(46,33,64,0.18)"; c.lineWidth = 2;
+      for (let i = 6; i < 26; i += 7) { c.beginPath(); c.moveTo(x + i, 20); c.lineTo(x + i, 370); c.stroke(); }
+      rr(c, x - 4, 370, 34, 16, 3); fs(c, "#fff", 2); rr(c, x - 4, 0, 34, 18, 3); fs(c, "#fff", 2); });
+    // spotlights
+    for (let i = 0; i < 3; i++) {
+      const x = 80 + i * 100, fl = 0.12 + Math.sin(t * 2 + i) * 0.03;
+      c.fillStyle = `rgba(255,245,200,${fl})`; c.beginPath(); c.moveTo(x - 8, 0); c.lineTo(x + 8, 0); c.lineTo(x + 46, 250); c.lineTo(x - 46, 250); c.closePath(); c.fill();
+      rr(c, x - 9, -4, 18, 12, 3); fs(c, "#4a4256", 2);
+    }
+    if (v === "a") {
+      // landscape painting
+      rr(c, 40, 70, 84, 66, 4); fs(c, "#e3b14a"); rr(c, 48, 78, 68, 50, 2); fs(c, "#8fd3ff", 2);
+      c.fillStyle = "#5cc74a"; c.beginPath(); c.moveTo(48, 128); c.quadraticCurveTo(80, 98, 116, 118); c.lineTo(116, 128); c.fill(); circ(c, 100, 92, 7); c.fillStyle = "#ffd34d"; c.fill();
+      // empty frame (stolen)
+      rr(c, 144, 54, 92, 104, 4); fs(c, "#e3b14a"); rr(c, 152, 62, 76, 88, 2); fs(c, shade(wall, -0.08), 2);
+      text(c, "?", 190, 106, 40, "rgba(46,33,64,0.25)");
+      rr(c, 162, 166, 56, 16, 4); fs(c, "#fff", 2); c.fillStyle = INK; c.fillRect(172, 172, 36, 3);
+      // portrait with moving eyes
+      rr(c, 254, 64, 66, 84, 4); fs(c, "#e3b14a"); rr(c, 262, 72, 50, 68, 2); fs(c, "#c7b2ff", 2);
+      circ(c, 287, 100, 14); fs(c, "#ffd6b0", 2); rr(c, 275, 114, 24, 26, 8); fs(c, "#3d3270", 2);
+      const ex = Math.sin(t * 0.8) * 2; [-5, 5].forEach(d => { circ(c, 287 + d, 98, 3); fs(c, "#fff", 1); circ(c, 287 + d + ex * 0.6, 98, 1.5); c.fillStyle = INK; c.fill(); });
+      // bench
+      rr(c, 52, 410, 112, 12, 4); fs(c, "#8b5a2b"); rr(c, 60, 422, 8, 30, 2); fs(c, "#5a3a1e", 2); rr(c, 148, 422, 8, 30, 2); fs(c, "#5a3a1e", 2);
+      // vase pedestal
+      rr(c, 280, 318, 40, 70, 3); fs(c, "#fff"); rr(c, 274, 312, 52, 10, 3); fs(c, "#fff");
+      c.beginPath(); c.moveTo(290, 312); c.quadraticCurveTo(280, 290, 292, 272); c.lineTo(308, 272); c.quadraticCurveTo(320, 290, 310, 312); c.closePath(); fs(c, "#3ccf9a");
+    } else {
+      // royal gallery: crown display, banners
+      [[40, "#8a63ff"], [290, "#ff6f91"]].forEach(([x, col]) => { const s2 = Math.sin(t * 1.5 + x) * 3;
+        c.beginPath(); c.moveTo(x, 30); c.lineTo(x + 40, 30); c.lineTo(x + 40 + s2, 150); c.lineTo(x + 20 + s2, 136); c.lineTo(x + s2, 150); c.closePath(); fs(c, col); star(c, x + 20 + s2 * 0.6, 80, 10, "#ffd34d"); });
+      rr(c, 30, 26, 60, 6, 3); fs(c, "#e3b14a", 2); rr(c, 280, 26, 60, 6, 3); fs(c, "#e3b14a", 2);
+      // portrait of queen bunny
+      rr(c, 132, 40, 96, 70, 4); fs(c, "#e3b14a"); rr(c, 140, 48, 80, 54, 2); fs(c, "#ffe3ef", 2);
+      ell(c, 172, 56, 4, 12); fs(c, "#e8d3c0", 1.5); ell(c, 188, 56, 4, 12); fs(c, "#e8d3c0", 1.5); circ(c, 180, 78, 14); fs(c, "#e8d3c0", 2);
+      // display case
+      rr(c, 150, 250, 60, 136, 3); fs(c, "#fff");
+      rr(c, 144, 244, 72, 10, 3); fs(c, "#fff");
+      rr(c, 152, 176, 56, 70, 4); fs(c, "rgba(190,230,255,0.45)");
+      c.strokeStyle = "rgba(255,255,255,0.8)"; c.lineWidth = 2; c.beginPath(); c.moveTo(160, 236); c.lineTo(176, 186); c.stroke();
+      ell(c, 180, 238, 18, 5); fs(c, "#c2405e", 2);
+      const gl = Math.sin(t * 4) > 0.6; if (gl) { star(c, 196, 194, 5, "#fff"); }
+      text(c, "EMPTY!", 180, 214, 11, "#c2405e");
+      // bench
+      rr(c, 40, 440, 100, 12, 4); fs(c, "#8b5a2b"); rr(c, 46, 452, 8, 28, 2); fs(c, "#5a3a1e", 2); rr(c, 126, 452, 8, 28, 2); fs(c, "#5a3a1e", 2);
+      // open skylight hint
+      rr(c, 236, 150, 64, 44, 4); fs(c, "#e3b14a"); rr(c, 242, 156, 52, 32, 2); fs(c, "#a9d8ff", 2);
+    }
+    // velvet ropes
+    const sag = 14 + Math.sin(t * 2) * 2;
+    [[40, 132], [228, 330]].forEach(([a, b]) => {
+      [a, b].forEach(x => { rr(c, x - 4, 330, 8, 52, 3); fs(c, "#e3b14a", 2); circ(c, x, 328, 6); fs(c, "#e3b14a", 2); rr(c, x - 10, 378, 20, 8, 3); fs(c, "#e3b14a", 2); });
+      c.beginPath(); c.moveTo(a + 5, 334); c.quadraticCurveTo((a + b) / 2, 334 + sag * 2, b - 5, 334); c.lineWidth = 7; c.strokeStyle = INK; c.stroke(); c.lineWidth = 4; c.strokeStyle = "#c2405e"; c.stroke();
+    });
+    // security camera
+    c.save(); c.translate(318, 30); c.rotate(0.5 + Math.sin(t * 0.6) * 0.3); rr(c, -6, -6, 28, 12, 3); fs(c, "#dfe6ee", 2); c.restore();
+    if (Math.sin(t * 5) > 0) { circ(c, 314, 26, 2.5); c.fillStyle = "#ff3b3b"; c.fill(); }
+    // plant
+    rr(c, 306, 446, 30, 32, 5); fs(c, "#ff8a5c");
+    [-0.6, -0.2, 0.2, 0.6].forEach((a, i) => { c.save(); c.translate(321, 448); c.rotate(a + Math.sin(t * 1.8 + i) * 0.06); ell(c, 0, -22, 6, 20); fs(c, "#3cb95a", 2); c.restore(); });
+  }
+
+  // Deterministic "random" so scenes look the same every frame.
+  function rnd(i) { const x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+
+  function party(c, t) {
+    // bunting
+    const cols = ["#ff6f91", "#ffbf3c", "#3ccf9a", "#8a63ff", "#5ec4ff"];
+    const sag = Math.sin(t * 1.5) * 2;
+    c.beginPath(); c.moveTo(0, 10); c.quadraticCurveTo(W / 2, 34 + sag, W, 10); c.lineWidth = 2; c.strokeStyle = INK; c.stroke();
+    for (let i = 0; i < 13; i++) {
+      const x = 14 + i * 26, k = x / W, y = 10 + 4 * k * (1 - k) * (24 + sag);
+      c.beginPath(); c.moveTo(x - 10, y); c.lineTo(x + 10, y); c.lineTo(x, y + 18); c.closePath(); fs(c, cols[i % 5], 2);
+    }
+    // balloons tied to the table
+    [[78, 262, "#ff6f91", 0], [114, 246, "#5ec4ff", 1.7], [178, 258, "#ffbf3c", 3.1]].forEach(([x, y, col, ph]) => {
+      const bx = x + Math.sin(t * 1.3 + ph) * 4, by = y + Math.sin(t * 1.9 + ph) * 3;
+      c.beginPath(); c.moveTo(bx, by + 18); c.quadraticCurveTo(bx + 6, by + 40, x + 10, 326); c.lineWidth = 1.5; c.strokeStyle = INK; c.stroke();
+      ell(c, bx, by, 14, 17); fs(c, col, 2.5);
+      c.beginPath(); c.moveTo(bx - 4, by + 17); c.lineTo(bx + 4, by + 17); c.lineTo(bx, by + 21); c.closePath(); fs(c, col, 1.5);
+      ell(c, bx - 5, by - 6, 3.5, 5, -0.4); c.fillStyle = "rgba(255,255,255,0.6)"; c.fill();
+    });
+    // confetti on the floor
+    for (let i = 0; i < 26; i++) { c.fillStyle = cols[i % 5]; c.save(); c.translate(rnd(i) * W, 392 + rnd(i + 50) * 120); c.rotate(rnd(i + 99) * 6); c.fillRect(-3, -1.5, 6, 3); c.restore(); }
+  }
+
+  function library(c, t, v) {
+    const night = v === "night";
+    c.fillStyle = night ? "#5d4f86" : "#f1dfc0"; c.fillRect(0, 0, W, 392);
+    c.fillStyle = night ? "#56497d" : "#ead3ad"; for (let x = 0; x < W; x += 28) c.fillRect(x, 0, 14, 392);
+    // floor boards
+    c.fillStyle = night ? "#6b4c3c" : "#b07a4a"; c.fillRect(0, 388, W, 140);
+    c.strokeStyle = "rgba(60,30,10,0.3)"; c.lineWidth = 2;
+    for (let y = 388; y < 520; y += 20) { c.beginPath(); c.moveTo(0, y); c.lineTo(W, y); c.stroke(); for (let x = ((y / 20) % 2) * 40; x < W; x += 80) { c.beginPath(); c.moveTo(x, y); c.lineTo(x, y + 20); c.stroke(); } }
+    c.fillStyle = night ? "#4a3427" : "#8a5d39"; c.fillRect(0, 384, W, 8);
+    // arched window
+    const wx = 130, wy = 40, ww = 100, wh = 150;
+    c.beginPath(); c.moveTo(wx, wy + wh); c.lineTo(wx, wy + 50); c.arc(wx + 50, wy + 50, 50, Math.PI, 0); c.lineTo(wx + ww, wy + wh); c.closePath(); fs(c, "#8b5a2b");
+    const g = c.createLinearGradient(0, wy, 0, wy + wh);
+    if (night) { g.addColorStop(0, "#1d1a4a"); g.addColorStop(1, "#4b3f8c"); } else { g.addColorStop(0, "#7fd0ff"); g.addColorStop(1, "#d8f3ff"); }
+    c.save();
+    c.beginPath(); c.moveTo(wx + 7, wy + wh - 4); c.lineTo(wx + 7, wy + 50); c.arc(wx + 50, wy + 50, 43, Math.PI, 0); c.lineTo(wx + ww - 7, wy + wh - 4); c.closePath();
+    c.fillStyle = g; c.fill(); c.clip();
+    if (night) {
+      circ(c, 200, 82, 13); c.fillStyle = "#fff6c2"; c.fill(); circ(c, 206, 77, 11); c.fillStyle = "#26215a"; c.fill();
+      for (let i = 0; i < 7; i++) { c.globalAlpha = 0.4 + 0.6 * Math.abs(Math.sin(t * 2 + i * 1.7)); star(c, 146 + rnd(i) * 70, 60 + rnd(i + 9) * 100, 2.5, "#fff6c2"); }
+      c.globalAlpha = 1;
+    } else {
+      const cx = wx + ((t * 6) % 140) - 20;
+      blob(c, [[cx, 110, 10], [cx + 12, 104, 12], [cx + 24, 110, 9]], "#fff", 1);
+    }
+    c.restore();
+    c.strokeStyle = "#8b5a2b"; c.lineWidth = 5; c.beginPath(); c.moveTo(wx + 50, wy + 4); c.lineTo(wx + 50, wy + wh); c.moveTo(wx + 4, wy + 92); c.lineTo(wx + ww - 4, wy + 92); c.stroke();
+    rr(c, wx - 8, wy + wh - 2, ww + 16, 10, 3); fs(c, "#a8703f");
+    // bookshelves (gaps leave room for hidden clues)
+    const BOOK = ["#e5263f", "#2f4b9a", "#3cb44a", "#ffbf3c", "#8a63ff", "#ff8a3d", "#38c6c0", "#c2405e"];
+    function shelf(x0, w, gaps, seed) {
+      rr(c, x0, 26, w, 364, 4); fs(c, "#7a4a24");
+      c.fillStyle = "#5a3418"; c.fillRect(x0 + 6, 32, w - 12, 350);
+      for (let r = 0; r < 5; r++) {
+        const bottom = 100 + r * 70;
+        let x = x0 + 9, i = 0;
+        while (x < x0 + w - 16) {
+          const bw = 8 + Math.floor(rnd(seed + r * 40 + i) * 7), bh = 40 + Math.floor(rnd(seed + r * 40 + i + 7) * 20);
+          if (!gaps.some(([gr, gx]) => gr === r && Math.abs(x + bw / 2 - gx) < 22)) {
+            rr(c, x, bottom - bh, bw, bh, 2); fs(c, BOOK[Math.floor(rnd(seed + r * 13 + i * 3) * BOOK.length)], 1.5);
+            c.fillStyle = "rgba(255,255,255,0.5)"; c.fillRect(x + 2, bottom - bh + 8, bw - 4, 2);
+          }
+          x += bw + 1; i++;
+        }
+        rr(c, x0 + 2, bottom, w - 4, 8, 2); fs(c, "#8b5a2b", 2);
+      }
+    }
+    shelf(0, 112, [[0, 56], [3, 60]], 3);
+    shelf(248, 112, [[2, 304], [4, 318]], 71);
+    // ladder
+    c.strokeStyle = "#a8703f"; c.lineWidth = 5;
+    c.beginPath(); c.moveTo(232, 388); c.lineTo(254, 60); c.moveTo(252, 388); c.lineTo(274, 60); c.stroke();
+    c.lineWidth = 4; for (let i = 1; i < 9; i++) { const k = i / 9; c.beginPath(); c.moveTo(232 + 22 * k, 388 - 328 * k); c.lineTo(252 + 22 * k, 388 - 328 * k); c.stroke(); }
+    // lamp glow
+    const fl = 0.9 + Math.sin(t * 7) * 0.04 + Math.sin(t * 13) * 0.03;
+    const glow = c.createRadialGradient(222, 286, 6, 222, 300, night ? 170 : 110);
+    glow.addColorStop(0, `rgba(255,226,140,${(night ? 0.55 : 0.35) * fl})`); glow.addColorStop(1, "rgba(255,226,140,0)");
+    // desk
+    rr(c, 126, 310, 10, 78, 2); fs(c, "#6b3f1f"); rr(c, 226, 310, 10, 78, 2); fs(c, "#6b3f1f");
+    rr(c, 116, 300, 132, 14, 4); fs(c, "#8b5a2b");
+    // open book with a turning page
+    c.beginPath(); c.moveTo(152, 298); c.quadraticCurveTo(166, 290, 180, 296); c.lineTo(180, 300); c.quadraticCurveTo(166, 294, 152, 302); c.closePath(); fs(c, "#fffaf0", 2);
+    c.beginPath(); c.moveTo(180, 296); c.quadraticCurveTo(194, 290, 208, 298); c.lineTo(208, 302); c.quadraticCurveTo(194, 294, 180, 300); c.closePath(); fs(c, "#fffaf0", 2);
+    const pp = (t % 4) / 1.2;
+    if (pp < 1) { const sx = Math.cos(pp * Math.PI); c.beginPath(); c.moveTo(180, 296); c.quadraticCurveTo(180 + 14 * sx, 288 - Math.sin(pp * Math.PI) * 10, 180 + 28 * sx, 296); c.lineTo(180 + 28 * sx, 299); c.quadraticCurveTo(180 + 14 * sx, 291, 180, 299); c.closePath(); fs(c, "#fff", 1.5); }
+    // banker's lamp
+    rr(c, 210, 294, 24, 6, 2); fs(c, "#c9a24c", 2); rr(c, 220, 268, 4, 28, 1); fs(c, "#c9a24c", 1.5);
+    c.beginPath(); c.moveTo(202, 274); c.quadraticCurveTo(222, 252, 242, 274); c.closePath(); fs(c, "#2f8a3a");
+    // armchair
+    rr(c, 22, 352, 80, 64, 18); fs(c, "#c2405e");
+    rr(c, 10, 384, 22, 50, 10); fs(c, "#a8324e"); rr(c, 92, 384, 22, 50, 10); fs(c, "#a8324e");
+    rr(c, 26, 396, 70, 34, 10); fs(c, "#d4506c");
+    rr(c, 20, 432, 8, 14, 2); fs(c, "#5a3418", 2); rr(c, 96, 432, 8, 14, 2); fs(c, "#5a3418", 2);
+    // rug
+    ell(c, 174, 478, 96, 22); fs(c, night ? "#7a5aa8" : "#8a63ff", 2);
+    c.save(); ell(c, 174, 478, 96, 22); c.clip(); c.strokeStyle = "rgba(255,255,255,0.45)"; c.lineWidth = 3; ell(c, 174, 478, 74, 15); c.stroke(); c.restore();
+    // spinning globe
+    ell(c, 296, 452, 18, 5); fs(c, "#8b5a2b", 2);
+    c.beginPath(); c.moveTo(296, 448); c.lineTo(296, 440); c.lineWidth = 4; c.strokeStyle = "#8b5a2b"; c.stroke();
+    c.beginPath(); c.arc(296, 418, 26, 0.5, Math.PI * 1.15); c.lineWidth = 3; c.strokeStyle = "#c9a24c"; c.stroke();
+    c.save(); circ(c, 296, 418, 20); c.fillStyle = "#5ec4ff"; c.fill(); c.clip();
+    const off = (t * 12) % 60;
+    c.fillStyle = "#3cb44a";
+    for (let k = -1; k < 2; k++) { const x0 = 276 + k * 60 + off; [[x0, 410, 8], [x0 + 8, 418, 6], [x0 + 26, 424, 7], [x0 + 32, 412, 5]].forEach(([x, y, r]) => { circ(c, x, y, r); c.fill(); }); }
+    c.restore(); circ(c, 296, 418, 20); fs(c, null, 2.5);
+    // light, dust and night shade
+    c.fillStyle = glow; c.fillRect(0, 0, W, SH);
+    for (let i = 0; i < 10; i++) { const p = (t * 0.06 + rnd(i)) % 1; c.globalAlpha = 0.6 * Math.sin(p * Math.PI); circ(c, 180 + rnd(i + 20) * 90 + Math.sin(t + i) * 8, 340 - p * 140, 1.6); c.fillStyle = "#fff6c2"; c.fill(); }
+    c.globalAlpha = 1;
+    if (night) { const sh = c.createRadialGradient(222, 286, 40, 222, 286, 380); sh.addColorStop(0, "rgba(20,14,50,0)"); sh.addColorStop(1, "rgba(20,14,50,0.4)"); c.fillStyle = sh; c.fillRect(0, 0, W, SH); }
+  }
+
+  function beach(c, t, v) {
+    const sunset = v === "sunset";
+    const sky = c.createLinearGradient(0, 0, 0, 196);
+    if (sunset) { sky.addColorStop(0, "#7b5ca8"); sky.addColorStop(0.5, "#ff8f7a"); sky.addColorStop(1, "#ffd59a"); }
+    else { sky.addColorStop(0, "#7fd0ff"); sky.addColorStop(1, "#d8f3ff"); }
+    c.fillStyle = sky; c.fillRect(0, 0, W, 200);
+    if (sunset) { c.save(); c.beginPath(); c.rect(0, 0, W, 194); c.clip(); circ(c, 180, 190, 44); c.fillStyle = "#ffb347"; c.fill(); circ(c, 180, 190, 34); c.fillStyle = "#ffd36b"; c.fill(); c.restore(); }
+    else {
+      c.save(); c.translate(300, 52); c.rotate(t * 0.3); c.fillStyle = "rgba(255,220,90,0.5)";
+      for (let i = 0; i < 10; i++) { c.rotate(Math.PI / 5); c.beginPath(); c.moveTo(-5, 28); c.lineTo(0, 44); c.lineTo(5, 28); c.fill(); }
+      c.restore(); circ(c, 300, 52, 24); fs(c, "#ffd34d", 2.5);
+    }
+    for (let i = 0; i < 2; i++) { const x = ((t * 7 + i * 220) % 460) - 60, y = 40 + i * 34; blob(c, [[x, y, 13], [x + 15, y - 6, 15], [x + 30, y, 12]], sunset ? "#ffc3b8" : "#fff", 1.2); }
+    // seagull
+    const gx = ((t * 34) % 470) - 50, gy = 96 + Math.sin(t * 1.4) * 10, fl = Math.sin(t * 9) * 5;
+    c.beginPath(); c.moveTo(gx - 12, gy - fl); c.quadraticCurveTo(gx - 6, gy - 6 - fl, gx, gy); c.quadraticCurveTo(gx + 6, gy - 6 - fl, gx + 12, gy - fl); c.lineWidth = 2.5; c.strokeStyle = INK; c.stroke();
+    // sea
+    const sea = c.createLinearGradient(0, 194, 0, 304);
+    if (sunset) { sea.addColorStop(0, "#c86a8f"); sea.addColorStop(1, "#f4a080"); } else { sea.addColorStop(0, "#2fa6e0"); sea.addColorStop(1, "#8ad8f5"); }
+    c.fillStyle = sea; c.fillRect(0, 194, W, 112);
+    c.strokeStyle = "rgba(255,255,255,0.55)"; c.lineWidth = 2;
+    for (let r = 0; r < 4; r++) { const y = 212 + r * 22, o = (t * (10 + r * 4) + r * 40) % 60; for (let x = -60 + o; x < W; x += 60) { c.beginPath(); c.moveTo(x, y); c.quadraticCurveTo(x + 10, y - 5, x + 20, y); c.stroke(); } }
+    // sailboat
+    const bx = ((t * 9) % 440) - 40, by = 206 + Math.sin(t * 2) * 1.5;
+    c.beginPath(); c.moveTo(bx - 14, by); c.lineTo(bx + 14, by); c.lineTo(bx + 9, by + 7); c.lineTo(bx - 9, by + 7); c.closePath(); fs(c, "#c2405e", 2);
+    c.beginPath(); c.moveTo(bx, by - 2); c.lineTo(bx, by - 26); c.lineTo(bx + 13, by - 4); c.closePath(); fs(c, "#fff", 2);
+    // sand + moving foam line
+    c.fillStyle = sunset ? "#e9bd8c" : "#f6dca0"; c.fillRect(0, 300, W, 230);
+    const wave = Math.sin(t * 1.1) * 7;
+    c.fillStyle = sunset ? "#d9a679" : "#e9c886"; c.fillRect(0, 300, W, 26 + wave);
+    c.beginPath(); c.moveTo(0, 296);
+    for (let x = 0; x <= W; x += 12) c.lineTo(x, 300 + wave + Math.sin(x * 0.08 + t * 2.4) * 4);
+    c.lineTo(W, 290); c.closePath(); c.fillStyle = "rgba(255,255,255,0.85)"; c.fill();
+    c.fillStyle = sunset ? "rgba(140,80,50,0.25)" : "rgba(170,120,50,0.25)";
+    for (let i = 0; i < 40; i++) { circ(c, rnd(i) * W, 330 + rnd(i + 40) * 190, 1.5); c.fill(); }
+    // palm tree
+    c.lineCap = "round";
+    c.beginPath(); c.moveTo(46, 444); c.quadraticCurveTo(36, 330, 72, 240); c.lineWidth = 20; c.strokeStyle = INK; c.stroke(); c.lineWidth = 15; c.strokeStyle = "#b07a4a"; c.stroke();
+    c.strokeStyle = "rgba(90,50,20,0.5)"; c.lineWidth = 2;
+    for (let k = 0.1; k < 1; k += 0.12) { const x = (1 - k) * (1 - k) * 46 + 2 * (1 - k) * k * 36 + k * k * 72, y = (1 - k) * (1 - k) * 444 + 2 * (1 - k) * k * 330 + k * k * 240; c.beginPath(); c.moveTo(x - 7, y); c.lineTo(x + 7, y - 2); c.stroke(); }
+    const sway = Math.sin(t * 1.3) * 0.08;
+    [-2.6, -1.9, -1.2, -0.5, 0.3].forEach((a, i) => { c.save(); c.translate(72, 238); c.rotate(a + sway); ell(c, 34, 0, 36, 9, 0.25); fs(c, i % 2 ? "#3cb44a" : "#2f9a3e", 2.5); c.restore(); });
+    [[64, 248], [80, 250], [72, 256]].forEach(([x, y]) => { circ(c, x, y, 6); fs(c, "#7a4f2e", 2); });
+    // sandcastle with a waving flag
+    rr(c, 70, 396, 60, 34, 3); fs(c, "#e3b86f");
+    [[70, 380, 16], [114, 380, 16], [90, 370, 20]].forEach(([x, y, w]) => { rr(c, x, y, w, 30, 2); fs(c, "#e3b86f"); for (let k = 0; k < 3; k++) { rr(c, x + k * (w / 3) + 1, y - 6, w / 3 - 2, 7, 1); fs(c, "#e3b86f", 2); } });
+    rr(c, 92, 410, 16, 20, 7); fs(c, "#b98a4a", 2);
+    c.beginPath(); c.moveTo(100, 364); c.lineTo(100, 340); c.lineWidth = 2; c.strokeStyle = INK; c.stroke();
+    const fw = Math.sin(t * 6) * 3;
+    c.beginPath(); c.moveTo(100, 340); c.quadraticCurveTo(108, 342 + fw, 116, 344); c.lineTo(100, 350); c.closePath(); fs(c, "#ff6f91", 1.5);
+    // towel + umbrella
+    rr(c, 240, 420, 110, 26, 4); fs(c, "#fff");
+    c.save(); rr(c, 240, 420, 110, 26, 4); c.clip(); c.fillStyle = "#5ec4ff"; for (let x = 240; x < 350; x += 20) c.fillRect(x, 420, 10, 26); c.restore(); rr(c, 240, 420, 110, 26, 4); fs(c, null, 2.5);
+    c.beginPath(); c.moveTo(296, 350); c.lineTo(296, 436); c.lineWidth = 4; c.strokeStyle = INK; c.stroke();
+    c.save(); c.beginPath(); c.arc(296, 352, 52, Math.PI, 0); c.closePath(); c.clip();
+    for (let k = 0; k < 6; k++) { c.beginPath(); c.moveTo(296, 352); c.arc(296, 352, 60, Math.PI + k * Math.PI / 6, Math.PI + (k + 1) * Math.PI / 6); c.closePath(); c.fillStyle = k % 2 ? "#fff" : "#ff5d73"; c.fill(); }
+    c.restore(); c.beginPath(); c.arc(296, 352, 52, Math.PI, 0); c.closePath(); fs(c, null, 3);
+    // crab scuttling
+    const cx = 156 + Math.sin(t * 0.8) * 46, cy = 428, snap = Math.abs(Math.sin(t * 5)) * 0.5;
+    [-1, 1].forEach(sd => { for (let l = 0; l < 3; l++) { c.beginPath(); c.moveTo(cx + sd * 8, cy + 2 + l * 2); c.lineTo(cx + sd * (16 + l * 2), cy + 8 + l * 3 + Math.sin(t * 14 + l) * 1.5); c.lineWidth = 2; c.strokeStyle = "#c2405e"; c.stroke(); } });
+    [-1, 1].forEach(sd => { c.save(); c.translate(cx + sd * 14, cy - 6); c.rotate(sd * snap); ell(c, 0, 0, 5, 4); fs(c, "#ff5d5d", 1.5); c.restore(); });
+    ell(c, cx, cy, 12, 8); fs(c, "#ff5d5d", 2);
+    [-4, 4].forEach(dx => { c.beginPath(); c.moveTo(cx + dx, cy - 6); c.lineTo(cx + dx, cy - 12); c.lineWidth = 1.5; c.strokeStyle = INK; c.stroke(); circ(c, cx + dx, cy - 13, 2.5); fs(c, "#fff", 1.2); });
+    if (sunset) { c.fillStyle = "rgba(120,60,120,0.12)"; c.fillRect(0, 0, W, SH); }
+  }
+
+  function winterPark(c, t, v) {
+    const sky = c.createLinearGradient(0, 0, 0, 210);
+    sky.addColorStop(0, "#a9c9ea"); sky.addColorStop(1, "#eaf4ff");
+    c.fillStyle = sky; c.fillRect(0, 0, W, 214);
+    const sg = c.createRadialGradient(300, 50, 10, 300, 50, 60); sg.addColorStop(0, "rgba(255,247,214,0.9)"); sg.addColorStop(1, "rgba(255,247,214,0)");
+    c.fillStyle = sg; c.fillRect(220, 0, 140, 120); circ(c, 300, 50, 20); c.fillStyle = "#fff7d6"; c.fill();
+    for (let i = 0; i < 2; i++) { const x = ((t * 6 + i * 200) % 460) - 60, y = 40 + i * 26; blob(c, [[x, y, 14], [x + 16, y - 6, 16], [x + 32, y, 13]], "#f4f7fb", 1.2); }
+    c.fillStyle = "#e3edf8"; c.beginPath(); c.moveTo(0, 210); c.quadraticCurveTo(90, 150, 200, 190); c.quadraticCurveTo(290, 150, 360, 186); c.lineTo(360, 230); c.lineTo(0, 230); c.fill();
+    c.fillStyle = "#f6f9fd"; c.fillRect(0, 214, W, SH - 214);
+    for (let x = 6; x < W; x += 26) { rr(c, x, 196, 9, 34, 3); fs(c, "#a87b52", 2); ell(c, x + 4.5, 196, 7, 4); c.fillStyle = "#fff"; c.fill(); }
+    rr(c, 0, 204, W, 6, 2); fs(c, "#a87b52", 2); rr(c, 0, 218, W, 6, 2); fs(c, "#a87b52", 2);
+    c.fillStyle = "#e4ecf6"; c.beginPath(); c.moveTo(150, 230); c.quadraticCurveTo(120, 330, 200, 400); c.quadraticCurveTo(260, 460, 240, 520); c.lineTo(310, 520); c.quadraticCurveTo(320, 450, 260, 390); c.quadraticCurveTo(200, 330, 200, 230); c.fill();
+    // bare snowy tree
+    rr(c, 60, 210, 34, 136, 8); fs(c, "#8b5a2b");
+    c.lineCap = "round";
+    [[77, 214, 40, 120, 8], [80, 204, 132, 112, 7], [77, 196, 82, 86, 7], [66, 170, 18, 138, 5], [92, 176, 156, 150, 5], [104, 152, 120, 132, 3]].forEach(([x1, y1, x2, y2, w]) => {
+      c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.lineWidth = w + 3; c.strokeStyle = INK; c.stroke(); c.lineWidth = w; c.strokeStyle = "#8b5a2b"; c.stroke();
+      c.beginPath(); c.moveTo(x1 + (x2 - x1) * 0.3, y1 + (y2 - y1) * 0.3 - w * 0.6); c.lineTo(x2, y2 - w * 0.6); c.lineWidth = w * 0.7; c.strokeStyle = "#fff"; c.stroke();
+    });
+    ell(c, 77, 212, 22, 6); c.fillStyle = "#fff"; c.fill();
+    // frozen pond with a skating duckling
+    ell(c, 268, 372, 82, 30); fs(c, "#c9ecff");
+    c.strokeStyle = "rgba(255,255,255,0.9)"; c.lineWidth = 2; [[230, 364, 30], [280, 380, 22], [300, 362, 16]].forEach(([x, y, l]) => { c.beginPath(); c.moveTo(x, y); c.lineTo(x + l, y - 4); c.stroke(); });
+    const dx = 268 + Math.sin(t * 0.9) * 46, dir = Math.cos(t * 0.9) > 0 ? 1 : -1, dy = 366;
+    ell(c, dx, dy, 12, 8); fs(c, "#ffd43b", 2); circ(c, dx + dir * 8, dy - 9, 7); fs(c, "#ffd43b", 2);
+    ell(c, dx + dir * 15, dy - 8, 4, 2.5); fs(c, "#ff9a2e", 1.5);
+    c.fillStyle = "#e5263f"; c.fillRect(dx + dir * 3 - 4, dy - 4, 9, 4);
+    // snowy bench
+    rr(c, 262, 270, 84, 10, 3); fs(c, "#b06a3c"); rr(c, 262, 248, 84, 10, 3); fs(c, "#b06a3c");
+    ell(c, 304, 247, 42, 4); c.fillStyle = "#fff"; c.fill(); ell(c, 304, 269, 42, 4); c.fill();
+    rr(c, 270, 280, 7, 22, 2); fs(c, "#5a3a1e", 2); rr(c, 332, 280, 7, 22, 2); fs(c, "#5a3a1e", 2);
+    // snowman
+    circ(c, 150, 452, 32); fs(c, "#fff"); circ(c, 150, 404, 24); fs(c, "#fff"); circ(c, 150, 366, 18); fs(c, "#fff");
+    [[-6, 362], [6, 362]].forEach(([a, b]) => { circ(c, 150 + a, b, 2.6); c.fillStyle = INK; c.fill(); });
+    for (let i = -2; i <= 2; i++) { circ(c, 150 + i * 4, 373 + Math.abs(i) * -1, 1.5); c.fillStyle = INK; c.fill(); }
+    [396, 408, 420].forEach(y => { circ(c, 150, y, 2.6); c.fillStyle = INK; c.fill(); });
+    if (v === "festival") { c.beginPath(); c.moveTo(150, 365); c.lineTo(166, 368); c.lineTo(150, 370); c.closePath(); fs(c, "#ff8a2e", 1.5); }
+    const arm = Math.sin(t * 2) * 0.1;
+    [[-1, 0.4], [1, -0.4]].forEach(([sd, a]) => { c.save(); c.translate(150 + sd * 20, 400); c.rotate(sd * (0.4 + arm) + a * 0); c.beginPath(); c.moveTo(0, 0); c.lineTo(sd * 30, -14); c.moveTo(sd * 22, -10); c.lineTo(sd * 28, -20); c.lineWidth = 3; c.strokeStyle = "#6b3f1f"; c.stroke(); c.restore(); });
+    rr(c, 132, 380, 36, 8, 3); fs(c, "#e5263f", 2);
+    c.save(); c.translate(160, 386); c.rotate(0.2 + Math.sin(t * 2.2) * 0.15); rr(c, -4, 0, 9, 22, 3); fs(c, "#e5263f", 2); c.restore();
+    rr(c, 138, 338, 24, 14, 2); fs(c, "#2a2333"); rr(c, 132, 350, 36, 5, 2); fs(c, "#2a2333");
+    // snow drifts
+    [[30, 520, 50], [330, 470, 40], [240, 230, 30]].forEach(([x, y, r]) => { ell(c, x, y, r, r * 0.3); c.fillStyle = "#e8f0fa"; c.fill(); });
+    if (v === "festival") {
+      const cols = ["#ff6f91", "#ffbf3c", "#3ccf9a", "#8a63ff", "#5ec4ff"], sag = Math.sin(t * 1.5) * 2;
+      c.beginPath(); c.moveTo(0, 10); c.quadraticCurveTo(W / 2, 34 + sag, W, 10); c.lineWidth = 2; c.strokeStyle = INK; c.stroke();
+      for (let i = 0; i < 13; i++) { const x = 14 + i * 26, k = x / W, y = 10 + 4 * k * (1 - k) * (24 + sag); c.beginPath(); c.moveTo(x - 10, y); c.lineTo(x + 10, y); c.lineTo(x, y + 18); c.closePath(); fs(c, cols[i % 5], 2); }
+    }
+    // falling snow
+    c.fillStyle = "#fff";
+    for (let i = 0; i < 46; i++) {
+      const y = ((t * (18 + rnd(i) * 22) + rnd(i + 3) * SH) % (SH + 20)) - 10, x = (rnd(i + 7) * W + Math.sin(t * 0.8 + i) * 14 + W) % W;
+      c.globalAlpha = 0.85; circ(c, x, y, 1.4 + rnd(i + 11) * 2); c.fill();
+    }
+    c.globalAlpha = 1;
+  }
+
+  function park(c, t, v) {
+    const aut = v === "autumn";
+    const sky = c.createLinearGradient(0, 0, 0, 200);
+    sky.addColorStop(0, aut ? "#ffc58f" : "#7fd0ff"); sky.addColorStop(1, aut ? "#ffe7c4" : "#dff6ff");
+    c.fillStyle = sky; c.fillRect(0, 0, W, 210);
+    // sun with rotating rays
+    c.save(); c.translate(300, 50); c.rotate(t * 0.3); c.fillStyle = "rgba(255,220,90,0.5)";
+    for (let i = 0; i < 10; i++) { c.rotate(Math.PI / 5); c.beginPath(); c.moveTo(-5, 28); c.lineTo(0, 44); c.lineTo(5, 28); c.fill(); } c.restore();
+    circ(c, 300, 50, 24); fs(c, "#ffd34d", 2.5);
+    // clouds
+    for (let i = 0; i < 3; i++) { const x = ((t * 8 + i * 140) % 460) - 60, y = 36 + i * 22;
+      blob(c, [[x, y, 14], [x + 16, y - 6, 16], [x + 32, y, 13]], "#fff", 1.2); }
+    // hills + fence
+    c.fillStyle = aut ? "#d9b35c" : "#8fdc7a"; c.beginPath(); c.moveTo(0, 210); c.quadraticCurveTo(90, 150, 200, 190); c.quadraticCurveTo(290, 150, 360, 186); c.lineTo(360, 230); c.lineTo(0, 230); c.fill();
+    c.fillStyle = aut ? "#c9a24c" : "#6fcf5c"; c.fillRect(0, 214, W, SH - 214);
+    for (let x = 6; x < W; x += 26) { rr(c, x, 196, 9, 34, 3); fs(c, "#fff", 2); }
+    rr(c, 0, 204, W, 6, 2); fs(c, "#fff", 2); rr(c, 0, 218, W, 6, 2); fs(c, "#fff", 2);
+    // path
+    c.fillStyle = "#f2d6a2"; c.beginPath(); c.moveTo(150, 230); c.quadraticCurveTo(120, 330, 200, 400); c.quadraticCurveTo(260, 460, 240, 520); c.lineTo(310, 520); c.quadraticCurveTo(320, 450, 260, 390); c.quadraticCurveTo(200, 330, 200, 230); c.fill();
+    // big tree
+    rr(c, 60, 210, 34, 136, 8); fs(c, "#8b5a2b");
+    c.strokeStyle = "rgba(60,30,10,0.35)"; c.lineWidth = 2; c.beginPath(); c.moveTo(72, 240); c.lineTo(70, 330); c.moveTo(84, 260); c.lineTo(86, 320); c.stroke();
+    c.save(); c.translate(78, 170); c.rotate(Math.sin(t * 1.1) * 0.03);
+    blob(c, [[-40, 20, 42], [40, 18, 40], [0, -18, 50], [-6, 34, 38]], aut ? "#f08a32" : "#3cb95a", 1.5);
+    if (!aut) [[-30, 0], [24, -10], [10, 30], [-14, 40]].forEach(([a, b]) => { circ(c, a, b, 6); fs(c, "#ff5d5d", 1.5); });
+    c.restore();
+    // pond + ripples + swimming duckling
+    ell(c, 268, 372, 82, 30); fs(c, "#5ec4ff");
+    for (let i = 0; i < 2; i++) { const p = (t * 0.4 + i * 0.5) % 1; c.globalAlpha = 1 - p; ell(c, 250, 372, 10 + p * 40, 3 + p * 12); c.lineWidth = 2; c.strokeStyle = "#fff"; c.stroke(); }
+    c.globalAlpha = 1;
+    const dx = 290 + Math.sin(t * 0.7) * 26, dy = 366 + Math.sin(t * 3) * 1.5;
+    ell(c, dx, dy, 13, 8); fs(c, "#ffd43b", 2); circ(c, dx + (Math.cos(t * 0.7) > 0 ? 9 : -9), dy - 9, 7); fs(c, "#ffd43b", 2);
+    ell(c, dx + (Math.cos(t * 0.7) > 0 ? 16 : -16), dy - 8, 4, 2.5); fs(c, "#ff9a2e", 1.5);
+    // bench
+    rr(c, 262, 270, 84, 10, 3); fs(c, "#b06a3c"); rr(c, 262, 248, 84, 10, 3); fs(c, "#b06a3c");
+    rr(c, 270, 280, 7, 22, 2); fs(c, "#5a3a1e", 2); rr(c, 332, 280, 7, 22, 2); fs(c, "#5a3a1e", 2);
+    // picnic blanket
+    c.save(); c.translate(140, 444);
+    c.beginPath(); c.moveTo(-90, -26); c.lineTo(76, -30); c.lineTo(96, 34); c.lineTo(-104, 34); c.closePath(); c.fillStyle = "#fff"; c.fill(); c.save(); c.clip();
+    c.fillStyle = "rgba(255,90,110,0.85)"; for (let i = -6; i < 7; i++) c.fillRect(i * 18, -40, 9, 80); for (let j = -3; j < 3; j++) c.fillRect(-120, j * 16, 240, 8);
+    c.restore(); c.beginPath(); c.moveTo(-90, -26); c.lineTo(76, -30); c.lineTo(96, 34); c.lineTo(-104, 34); c.closePath(); fs(c, null);
+    // basket open
+    rr(c, -66, -40, 52, 32, 6); fs(c, "#d9a066"); c.beginPath(); c.moveTo(-66, -40); c.lineTo(-70, -62); c.lineTo(-20, -58); c.lineTo(-14, -40); fs(c, "#c98b4f");
+    ell(c, 36, -6, 20, 6); fs(c, "#fff");
+    c.restore();
+    // flowers
+    [[30, 470], [56, 500], [330, 520 - 26], [20, 400], [200, 250], [236, 300]].forEach(([x, y], i) => {
+      const s2 = Math.sin(t * 2 + i) * 3;
+      c.beginPath(); c.moveTo(x, y); c.lineTo(x + s2, y - 16); c.lineWidth = 2; c.strokeStyle = "#2f8a3a"; c.stroke();
+      blob(c, [[x + s2 - 4, y - 18, 3.5], [x + s2 + 4, y - 18, 3.5], [x + s2, y - 22, 3.5], [x + s2, y - 14, 3.5]], aut ? "#ffb347" : ["#ff8ab0", "#fff", "#b48cff"][i % 3], 1);
+      circ(c, x + s2, y - 18, 2.5); c.fillStyle = "#ffd34d"; c.fill();
+    });
+    // butterflies or falling leaves
+    if (!aut) for (let i = 0; i < 2; i++) {
+      const bx = 180 + Math.sin(t * 0.6 + i * 3) * 120, by = 280 + Math.sin(t * 1.3 + i) * 60, f = Math.abs(Math.sin(t * 12 + i));
+      [-1, 1].forEach(s => { ell(c, bx + s * 5 * f, by, 5 * f + 1, 6, s * 0.3); fs(c, i ? "#b48cff" : "#ff8ab0", 1.2); });
+      c.beginPath(); c.moveTo(bx, by - 4); c.lineTo(bx, by + 5); c.lineWidth = 2; c.strokeStyle = INK; c.stroke();
+    }
+    else for (let i = 0; i < 7; i++) {
+      const p = (t * 0.12 + i / 7) % 1, lx = (i * 53 + Math.sin(t + i) * 30) % W, ly = p * SH;
+      c.save(); c.translate(lx, ly); c.rotate(t * 2 + i); c.beginPath(); c.moveTo(0, -6); c.quadraticCurveTo(5, 0, 0, 6); c.quadraticCurveTo(-5, 0, 0, -6); fs(c, ["#f08a32", "#e5263f", "#ffc21a"][i % 3], 1.2); c.restore();
+    }
+    // tree hollow (squirrel home) in autumn
+    if (aut) { ell(c, 77, 268, 9, 12); fs(c, "#3d2414", 2); }
+  }
+
+  // ================= GAME STATE =================
+  let state = "title", t = 0, cur = null, caseIdx = 0;
+  let flyers = [], rings = [], popups = [], confetti = [];
+  let found, timeLeft, freeHint, hintT, hintClue, wrongAccuse, selected, lineT, solveT, dialogIdx, typed, typeT, enterT, starsEarned, coinsEarned, doubled, extraTimeUsed;
+
+  function startCase(i) {
+    caseIdx = i; cur = CASES[i];
+    found = cur.clues.map(() => false); timeLeft = cur.time; freeHint = true; hintT = 0; hintClue = -1; wrongAccuse = 0; extraTimeUsed = false;
+    flyers = []; rings = []; popups = []; confetti = []; selected = -1; dialogIdx = 0; enterT = 0; doubled = false;
+    state = "intro"; show("dialog");
+    Voice.say(`Case ${cur.id}. ${cur.title}.`, "narrator");
+    setLine(true);
+  }
+
+  function setLine(queue) {
+    const [who, line] = cur.intro[dialogIdx];
+    Voice.say(line, who === "cat" ? "detective" : cur.client, queue);
+    const sp = $("speaker");
+    sp.textContent = who === "cat" ? "Detective Paws" : CAST[cur.client].name;
+    sp.className = "speaker" + (who === "cat" ? "" : " client");
+    typed = 0; typeT = 0; $("line").textContent = "";
+  }
+  function advanceDialog() {
+    const full = cur.intro[dialogIdx][1];
+    if (typed < full.length) { typed = full.length; $("line").textContent = full; return; }
+    dialogIdx++;
+    if (dialogIdx >= cur.intro.length) { state = "search"; show(null); sfx.meow(); Voice.stop(); return; }
+    setLine();
+  }
+
+  function slotRect(i) { const w = 60, g = 8, x0 = (W - (5 * w + 4 * g)) / 2; return { x: x0 + i * (w + g), y: TRAY + 18, w, h: 60 }; }
+
+  function tapSearch(p) {
+    // HUD buttons
+    if (p.y < TOP) {
+      if (p.x < 54) { pause(); return; }
+      if (p.x > 252) { useHint(); return; }
+      return;
+    }
+    if (p.y > TRAY) return;
+    const sy = p.y - TOP;
+    let best = -1, bd = 1e9;
+    cur.clues.forEach((cl, i) => { if (found[i]) return; const d = Math.hypot(cl.x - p.x, cl.y - sy); const r = Math.max(24, cl.s * 0.95); if (d < r && d < bd) { bd = d; best = i; } });
+    rings.push({ x: p.x, y: p.y, life: 0.5, ok: best >= 0 });
+    if (best >= 0) {
+      found[best] = true; sfx.found(); buzz(15);
+      const cl = cur.clues[best], sr = slotRect(best);
+      Voice.say(cl.name + "!", "detective");
+      flyers.push({ i: best, x0: cl.x, y0: cl.y + TOP, x1: sr.x + sr.w / 2, y1: sr.y + sr.h / 2 - 4, p: 0 });
+      popups.push({ text: cl.name + "!", x: Math.min(W - 70, Math.max(70, cl.x)), y: cl.y + TOP - 26, life: 1.4, col: "#fff" });
+      if (hintClue === best) { hintT = 0; hintClue = -1; }
+      if (found.every(Boolean)) setTimeout(() => { if (state === "search") goLineup(); }, 1100);
+    } else {
+      timeLeft = Math.max(0, timeLeft - 3); sfx.miss();
+      popups.push({ text: "−3s", x: p.x, y: p.y - 20, life: 0.9, col: "#ff6f91" });
+    }
+  }
+
+  function useHint() {
+    if (hintT > 0) return;
+    const left = cur.clues.map((_, i) => i).filter(i => !found[i]);
+    if (!left.length) return;
+    const go = () => { hintClue = left[Math.floor(Math.random() * left.length)]; hintT = 4; sfx.hint(); };
+    if (freeHint) { freeHint = false; go(); }
+    else Ads.rewarded(ok => ok ? go() : toast("Watch the whole ad to get a hint"));
+  }
+
+  function goLineup() {
+    state = "lineup"; lineT = 0; selected = -1; show("lineup");
+    $("whoName").textContent = "Who did it?"; $("alibi").textContent = "Tap a suspect to hear their story.";
+    $("accuseBtn").disabled = true;
+    $("chips").innerHTML = cur.clues.map(c => `<span class="chip">${c.name}</span>`).join("");
+    Voice.say("All the clues are found. Now, who did it?", "detective");
+  }
+  const SX = [70, 180, 290];
+  function tapLineup(p) {
+    if (p.y < 130 || p.y > 390) return;
+    const i = SX.findIndex(x => Math.abs(p.x - x) < 52);
+    if (i < 0) return;
+    selected = i; sfx.click();
+    const s = cur.suspects[i];
+    $("whoName").textContent = CAST[s.who].name;
+    $("alibi").textContent = "“" + s.alibi + "”";
+    Voice.say(s.alibi, s.who);
+    $("accuseBtn").disabled = false;
+  }
+  let shakeSel = 0;
+  function accuse() {
+    if (selected < 0) return;
+    if (selected === cur.culprit) {
+      state = "solved"; solveT = 0; sfx.win(); buzz(60);
+      Voice.say("Busted!", "detective");
+      const fast = timeLeft > cur.time * 0.45;
+      starsEarned = Math.max(1, 3 - wrongAccuse - (fast ? 0 : 1));
+      coinsEarned = starsEarned * 20 + (caseIdx + 1) * 5;
+      save.coins += coinsEarned;
+      save.solved[cur.id] = Math.max(save.solved[cur.id] || 0, starsEarned);
+      save.closed = (save.closed || 0) + 1; persist();
+      for (let i = 0; i < 90; i++) confetti.push({ x: Math.random() * W, y: -Math.random() * 300, vx: (Math.random() - 0.5) * 60, vy: 80 + Math.random() * 120, r: Math.random() * 6, col: ["#ff6f91", "#ffbf3c", "#3ccf9a", "#8a63ff", "#5ec4ff"][i % 5] });
+      setTimeout(() => {
+        $("starRow").innerHTML = [0, 1, 2].map(i => `<span class="${i < starsEarned ? "" : "off"}">⭐</span>`).join("");
+        $("reveal").textContent = cur.reveal; $("earned").textContent = coinsEarned;
+        $("doubleBtn").style.display = "flex";
+        $("nextBtn").textContent = caseIdx < CASES.length - 1 ? "Next case" : "All cases";
+        updateCoins(); show("solved");
+        Voice.say(cur.reveal, "narrator", true);
+      }, 1600);
+      show(null);
+    } else {
+      wrongAccuse++; sfx.wrong(); buzz(80); shakeSel = 0.6;
+      $("alibi").textContent = "“It wasn't me! Look at the clues again!”";
+      Voice.say("It wasn't me! Look at the clues again!", cur.suspects[selected].who);
+      toast("Wrong suspect! −1 star");
+    }
+  }
+
+  function pause() { if (state !== "search") return; state = "pause"; show("pause"); }
+
+  // ================= UPDATE & DRAW =================
+  function moodFor(st) {
+    switch (st) {
+      case "title": case "cases": case "shop": return ["title", 1];
+      case "intro": return ["title", 0.4];
+      case "search": return ["search", 0.85];
+      case "pause": return ["search", 0.3];
+      case "lineup": return ["lineup", 0.6];
+      case "solved": return solveT > 2.4 ? ["title", 0.4] : [null, 0];
+      default: return [null, 0];
+    }
+  }
+  function update(dt) {
+    t += dt;
+    const [track, level] = moodFor(state);
+    if (track !== Music.track) { if (track) Music.play(track); else Music.stop(); }
+    if (level !== Music.level) Music.setLevel(level);
+    enterT += dt;
+    if (state === "intro" && cur) {
+      const full = cur.intro[dialogIdx][1];
+      TypeTalk.who = cur.intro[dialogIdx][0] === "cat" ? "detective" : cur.client;
+      TypeTalk.active = typed < full.length; TypeTalk.ch = full[typed] || "";
+      if (typed < full.length) { typeT += dt; while (typeT > 0.028 && typed < full.length) { typeT -= 0.028; typed++; if (typed % 3 === 0 && !save.voice) sfx.talk(); } $("line").textContent = full.slice(0, typed); }
+    }
+    if (state !== "intro") TypeTalk.active = false;
+    if (state === "search") {
+      timeLeft -= dt; hintT = Math.max(0, hintT - dt);
+      if (timeLeft <= 0) { timeLeft = 0; state = "timeup"; show("timeup"); $("moreTimeBtn").style.display = extraTimeUsed ? "none" : "flex"; sfx.wrong(); Voice.say("Time's up! The trail went cold.", "narrator"); }
+    }
+    if (state === "lineup") lineT += dt;
+    if (state === "solved") solveT += dt;
+    shakeSel = Math.max(0, shakeSel - dt);
+    for (const f of flyers) f.p = Math.min(1, f.p + dt * 1.8);
+    for (const r of rings) r.life -= dt; rings = (rings || []).filter(r => r.life > 0);
+    for (const p of popups) { p.life -= dt; p.y -= dt * 22; } popups = (popups || []).filter(p => p.life > 0);
+    for (const c of confetti) { c.x += c.vx * dt; c.y += c.vy * dt; c.r += dt * 6; } confetti = (confetti || []).filter(c => c.y < H + 20);
+  }
+
+  function draw() {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.fillStyle = "#2b2350"; ctx.fillRect(0, 0, cv.width, cv.height);
+    ctx.setTransform(scale, 0, 0, scale, ox, oy);
+    ctx.save(); ctx.beginPath(); ctx.rect(-200, -200, W + 400, H + 400); ctx.clip();
+    const det = detective();
+    if (state === "title" || state === "cases" || state === "shop") drawTitle(det);
+    else if (state === "intro") drawIntro(det);
+    else if (state === "search" || state === "pause" || state === "timeup") drawSearch(det);
+    else if (state === "lineup") drawLineup(det);
+    else if (state === "solved") drawSolved(det);
+    ctx.restore();
+  }
+
+  function drawTitle(det) {
+    const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, "#1d1840"); g.addColorStop(0.6, "#3d3270"); g.addColorStop(1, "#5a4a9a");
+    ctx.fillStyle = g; ctx.fillRect(-200, -200, W + 400, H + 400);
+    for (let i = 0; i < 26; i++) { ctx.globalAlpha = 0.4 + 0.6 * Math.abs(Math.sin(t * 1.5 + i * 7)); circ(ctx, (i * 97) % (W + 80) - 40, (i * 53) % 300, 1.5 + (i % 3) * 0.6); ctx.fillStyle = "#fff6c2"; ctx.fill(); }
+    ctx.globalAlpha = 1;
+    circ(ctx, 296, 232, 26); ctx.fillStyle = "#fff6c2"; ctx.fill(); circ(ctx, 307, 225, 22); ctx.fillStyle = "#28215a"; ctx.fill();
+    // buildings
+    [[-60, 300, 110, "#2a2257"], [40, 360, 90, "#30296a"], [120, 320, 100, "#2a2257"], [210, 280, 110, "#30296a"], [310, 340, 120, "#2a2257"]].forEach(([x, y, w, col], bi) => {
+      ctx.fillStyle = col; ctx.fillRect(x, y, w, H - y);
+      for (let wy = y + 20; wy < 560; wy += 34) for (let wx = x + 14; wx < x + w - 14; wx += 26) {
+        const lit = Math.sin(wx * 13.1 + wy * 7.7 + Math.floor(t * 0.4 + bi) * 3.3) > 0.1;
+        ctx.fillStyle = lit ? "#ffd56b" : "#3b3380"; ctx.fillRect(wx, wy, 12, 16);
+      }
+    });
+    // street + lamp
+    ctx.fillStyle = "#4a3f86"; ctx.fillRect(-200, 560, W + 400, 200);
+    ctx.fillStyle = "#5a4e9a"; ctx.fillRect(-200, 552, W + 400, 10);
+    const glow = ctx.createRadialGradient(64, 360, 10, 64, 420, 200); glow.addColorStop(0, "rgba(255,214,107,0.45)"); glow.addColorStop(1, "rgba(255,214,107,0)");
+    ctx.fillStyle = glow; ctx.fillRect(-140, 260, 400, 330);
+    rr(ctx, 58, 360, 10, 200, 4); fs(ctx, "#2e2140"); rr(ctx, 44, 340, 38, 26, 8); fs(ctx, "#ffd56b");
+    // footprints leading to detective
+    for (let i = 0; i < 5; i++) { ctx.globalAlpha = 0.25 + i * 0.1; drawClue(ctx, { type: "paw", color: "#2e2140" }, 330 - i * 26, 640 - (i % 2) * 14, 16, t); }
+    ctx.globalAlpha = 1;
+    drawCritter(ctx, W / 2, 548, artFor(det) ? 1.2 : 1.55, t, det, { item: "magnifier" });
+  }
+
+  function drawIntro(det) {
+    drawScene(ctx, cur, t);
+    ctx.fillStyle = "rgba(30,20,60,0.45)"; ctx.fillRect(-200, -200, W + 400, H + 400);
+    const e = Math.min(1, enterT * 1.6), ease = 1 - Math.pow(1 - e, 3);
+    const who = cur.intro[dialogIdx][0];
+    const hop = e < 1 ? Math.abs(Math.sin(enterT * 14)) * 12 : 0;
+    drawCritter(ctx, -60 + ease * 160, 470 - hop, 1.25, t, det, { item: "magnifier", viseme: visemeFor("detective") });
+    drawCritter(ctx, W + 60 - ease * 160, 470 - hop, 1.2, t, CAST[cur.client], { mood: "worried", viseme: visemeFor(cur.client), flip: true });
+    text(ctx, "CASE " + cur.id, W / 2, 46, 16, "#ffbf3c", "center", 5);
+    text(ctx, cur.title, W / 2, 76, 21, "#fff", "center", 6);
+    text(ctx, cur.place, W / 2, 104, 13, "#e9ddff", "center", 4);
+  }
+
+  function drawSearch(det) {
+    drawScene(ctx, cur, t);
+    // hint glow
+    if (hintT > 0 && hintClue >= 0) {
+      const cl = cur.clues[hintClue], pul = 1 + Math.sin(t * 8) * 0.15;
+      ctx.save(); ctx.globalAlpha = Math.min(1, hintT);
+      circ(ctx, cl.x, cl.y + TOP, 34 * pul); ctx.lineWidth = 5; ctx.strokeStyle = "#ffbf3c"; ctx.setLineDash([8, 6]); ctx.lineDashOffset = -t * 30; ctx.stroke(); ctx.setLineDash([]); ctx.restore();
+    }
+    // clues in scene
+    cur.clues.forEach((cl, i) => { if (!found[i]) drawClue(ctx, cl, cl.x, cl.y + TOP, cl.s, t); });
+    // tap rings
+    for (const r of rings) { const p = 1 - r.life / 0.5; ctx.globalAlpha = r.life * 2; circ(ctx, r.x, r.y, 10 + p * 26); ctx.lineWidth = 4; ctx.strokeStyle = r.ok ? "#3ccf9a" : "#ff6f91"; ctx.stroke(); }
+    ctx.globalAlpha = 1;
+    // HUD
+    ctx.fillStyle = "#2b2350"; ctx.fillRect(-200, -200, W + 400, TOP + 200);
+    rr(ctx, 8, 12, 42, 40, 12); fs(ctx, "#fff7ea"); ctx.fillStyle = INK; ctx.fillRect(22, 23, 5, 18); ctx.fillRect(31, 23, 5, 18);
+    const hc = 154;
+    text(ctx, cur.title, hc, 22, 13, "#e9ddff", "center", 0, 190);
+    const low = timeLeft < 15, tw = 92;
+    rr(ctx, hc - tw / 2, 32, tw, 26, 13); fs(ctx, low && Math.sin(t * 10) > 0 ? "#ff6f91" : "#fff7ea");
+    const m = Math.floor(timeLeft / 60), s = Math.floor(timeLeft % 60);
+    text(ctx, "⏱ " + m + ":" + String(s).padStart(2, "0"), hc, 46, 15, INK);
+    rr(ctx, 256, 12, 96, 40, 14); fs(ctx, hintT > 0 ? "#e9ddff" : "#ffbf3c");
+    text(ctx, "💡 Hint", 291, 32, 15, INK);
+    rr(ctx, 318, 23, 30, 18, 6); fs(ctx, freeHint ? "#3ccf9a" : "#8a63ff", 2); text(ctx, freeHint ? "FREE" : "AD", 333, 32, 9, "#fff");
+    // tray
+    const tg = ctx.createLinearGradient(0, TRAY, 0, H); tg.addColorStop(0, "#3d3270"); tg.addColorStop(1, "#2b2350");
+    ctx.fillStyle = tg; ctx.fillRect(-200, TRAY, W + 400, H - TRAY + 200);
+    ctx.fillStyle = "#ffbf3c"; ctx.fillRect(-200, TRAY, W + 400, 4);
+    text(ctx, "CLUES " + found.filter(Boolean).length + " / 5", W / 2, TRAY + 11, 11, "#e9ddff");
+    cur.clues.forEach((cl, i) => {
+      const r = slotRect(i);
+      rr(ctx, r.x, r.y, r.w, r.h, 14); fs(ctx, found[i] ? "#fff7ea" : "rgba(255,255,255,0.1)", found[i] ? 3 : 0);
+      const fl = flyers.find(f => f.i === i);
+      if (found[i] && fl && fl.p >= 1) drawClue(ctx, cl, r.x + r.w / 2, r.y + r.h / 2 - 4, 30, t);
+      if (!found[i]) text(ctx, "?", r.x + r.w / 2, r.y + r.h / 2 - 2, 26, "rgba(255,255,255,0.35)");
+      if (found[i]) { circ(ctx, r.x + r.w - 6, r.y + 6, 9); fs(ctx, "#3ccf9a", 2); ctx.beginPath(); ctx.moveTo(r.x + r.w - 10, r.y + 6); ctx.lineTo(r.x + r.w - 7, r.y + 9); ctx.lineTo(r.x + r.w - 2, r.y + 2); ctx.lineWidth = 2.5; ctx.strokeStyle = "#fff"; ctx.stroke(); }
+    });
+    // peeking detective in corner of tray
+    const pk = Math.sin(t * 1.2) * 3;
+    ctx.save(); ctx.beginPath(); ctx.rect(-200, TRAY - 60, W + 400, 60); ctx.clip();
+    drawCritter(ctx, 334, TRAY + 46 + pk, 0.5, t, det, { viseme: visemeFor("detective") }); ctx.restore();
+    // flying clues
+    for (const f of flyers) { if (f.p >= 1) continue; const e = 1 - Math.pow(1 - f.p, 3);
+      const x = f.x0 + (f.x1 - f.x0) * e, y = f.y0 + (f.y1 - f.y0) * e - Math.sin(e * Math.PI) * 60;
+      drawClue(ctx, cur.clues[f.i], x, y, cur.clues[f.i].s * (1 + Math.sin(e * Math.PI) * 0.8), t); }
+    // popups
+    for (const p of popups) { ctx.globalAlpha = Math.min(1, p.life * 2); text(ctx, p.text, p.x, p.y, 16, p.col, "center", 5); }
+    ctx.globalAlpha = 1;
+  }
+
+  function drawLineup(det) {
+    ctx.fillStyle = "#e9ddff"; ctx.fillRect(-200, -200, W + 400, H + 400);
+    ctx.strokeStyle = "rgba(46,33,64,0.25)"; ctx.lineWidth = 2;
+    for (let y = 110; y < 380; y += 27) { ctx.beginPath(); ctx.moveTo(-200, y); ctx.lineTo(W + 200, y); ctx.stroke(); }
+    for (let i = 0; i < 5; i++) text(ctx, (6 - i) + " ft", 18, 110 + i * 54, 10, "rgba(46,33,64,0.4)", "left");
+    ctx.fillStyle = "#c7b2ff"; ctx.fillRect(-200, 380, W + 400, 400);
+    text(ctx, "SUSPECT LINEUP", W / 2, 34, 22, "#fff", "center", 6);
+    text(ctx, "Match the clues to a suspect", W / 2, 62, 13, INK);
+    cur.suspects.forEach((s, i) => {
+      const e = Math.min(1, Math.max(0, lineT * 2 - i * 0.3)), ease = 1 - Math.pow(1 - e, 3);
+      const x = SX[i], y = 362 + (1 - ease) * 360;
+      if (selected === i) { const g = ctx.createRadialGradient(x, 230, 10, x, 300, 140); g.addColorStop(0, "rgba(255,240,170,0.9)"); g.addColorStop(1, "rgba(255,240,170,0)"); ctx.fillStyle = g; ctx.fillRect(x - 100, 90, 200, 300); }
+      drawCritter(ctx, x, y, 0.95, t, CAST[s.who], { mood: selected === i ? "worried" : "idle", shake: selected === i && shakeSel > 0, jump: false, viseme: visemeFor(s.who) });
+      rr(ctx, x - 48, 372, 96, 24, 8); fs(ctx, selected === i ? "#ffbf3c" : "#fff7ea");
+      const nm = CAST[s.who].name, short = /^(Mrs\.|Lady|Professor)/.test(nm) ? nm.replace("Professor", "Prof.") : nm.split(" ")[0];
+      text(ctx, short, x, 384, 13, INK, "center", 0, 90);
+    });
+  }
+
+  function drawSolved(det) {
+    drawScene(ctx, cur, t);
+    ctx.fillStyle = "rgba(30,20,60,0.35)"; ctx.fillRect(-200, -200, W + 400, H + 400);
+    const culprit = CAST[cur.suspects[cur.culprit].who];
+    drawCritter(ctx, 110, 520, 1.15, t, det, { mood: "happy", jump: true, item: "magnifier", viseme: visemeFor("detective") });
+    drawCritter(ctx, 260, 520, 1.1, t, culprit, { mood: "worried", flip: true });
+    text(ctx, "Busted!", 260, 330, 26, "#ffbf3c", "center", 7);
+    for (const c of confetti) { ctx.save(); ctx.translate(c.x, c.y); ctx.rotate(c.r); ctx.fillStyle = c.col; ctx.fillRect(-4, -2, 8, 4); ctx.restore(); }
+  }
+
+  // ================= LOOP =================
+  let last = performance.now();
+  function frame(now) { const dt = Math.min(0.05, (now - last) / 1000); last = now; update(dt); draw(); requestAnimationFrame(frame); }
+
+  // ================= UI =================
+  const $ = id => document.getElementById(id);
+  const screens = ["title", "cases", "dialog", "lineup", "solved", "timeup", "pause", "shop"];
+  function show(name) { screens.forEach(s => $(s).classList.toggle("show", s === name)); }
+  function updateCoins() { document.querySelectorAll(".coinCount").forEach(e => e.textContent = save.coins); }
+  function toast(msg) { const tt = $("toast"); tt.textContent = msg; tt.classList.add("show"); clearTimeout(toast._t); toast._t = setTimeout(() => tt.classList.remove("show"), 1800); }
+  const TOGGLES = [["music", "🎵", "Music"], ["sound", "🔔", "Sound effects"], ["voice", "🗣️", "Voices"]];
+  function soundIcon() {
+    document.querySelectorAll(".toggles").forEach(box => {
+      box.innerHTML = "";
+      TOGGLES.forEach(([k, icon, label]) => {
+        const b = document.createElement("button");
+        b.className = "iconbtn tg" + (save[k] ? "" : " off"); b.textContent = icon;
+        b.setAttribute("aria-label", label + (save[k] ? " on" : " off"));
+        b.onclick = () => {
+          save[k] = !save[k]; persist(); soundIcon(); Music.fade();
+          if (k === "voice" && !save.voice) Voice.stop();
+          toast(label + (save[k] ? " on" : " off"));
+        };
+        box.appendChild(b);
+      });
+    });
+  }
+
+  function unlocked(i) { return i === 0 || !!save.solved[CASES[i - 1].id]; }
+  function openCases() {
+    state = "cases"; Voice.stop();
+    const list = $("caseList"); list.innerHTML = "";
+    CASES.forEach((cs, i) => {
+      const b = document.createElement("button"), st = save.solved[cs.id] || 0, open = unlocked(i);
+      b.className = "case" + (open ? "" : " locked");
+      b.innerHTML = `<div class="num">${open ? cs.id : "🔒"}</div><div class="info"><div class="t">${cs.title}</div><div class="s">${cs.place}</div></div><div class="stars">${open ? "★".repeat(st) + "☆".repeat(3 - st) : ""}</div>`;
+      b.onclick = () => { if (!open) return toast("Solve the case before it first"); sfx.click(); startCase(i); };
+      list.appendChild(b);
+    });
+    updateCoins(); show("cases");
+  }
+  function goTitle() { state = "title"; Voice.stop(); updateCoins(); show("title"); }
+
+  function renderShop() {
+    const grid = $("skinGrid"); grid.innerHTML = "";
+    for (const l of LOOKS) {
+      const owned = save.owned.includes(l.id), on = save.skin === l.id;
+      const b = document.createElement("button"); b.className = "skin" + (on ? " on" : "");
+      const c = document.createElement("canvas"); c.width = 192; c.height = 192;
+      const cx = c.getContext("2d"); drawCritter(cx, 96, 182, 0.92, 1.3, lookChar(l), { item: "magnifier" });
+      b.appendChild(c);
+      const nm = document.createElement("div"); nm.className = "nm"; nm.textContent = l.name; b.appendChild(nm);
+      const pr = document.createElement("div"); pr.className = "pr"; pr.innerHTML = on ? "Wearing" : owned ? "Tap to wear" : `<div class="coin"></div>${l.price}`; b.appendChild(pr);
+      b.onclick = () => {
+        if (owned) save.skin = l.id;
+        else if (save.coins >= l.price) { save.coins -= l.price; save.owned.push(l.id); save.skin = l.id; sfx.win(); toast(`${l.name} unlocked!`); }
+        else { toast(`Need ${l.price - save.coins} more coins`); return; }
+        persist(); updateCoins(); renderShop();
+      };
+      grid.appendChild(b);
+    }
+  }
+
+  cv.addEventListener("pointerdown", e => {
+    const p = toLocal(e);
+    if (state === "search") tapSearch(p);
+    else if (state === "lineup") tapLineup(p);
+  });
+  $("dialog").addEventListener("pointerdown", () => { if (state === "intro") advanceDialog(); });
+
+  $("playBtn").onclick = () => { sfx.click(); openCases(); };
+  $("casesBack").onclick = goTitle;
+  $("shopBtn").onclick = () => { state = "shop"; renderShop(); updateCoins(); show("shop"); };
+  $("shopBack").onclick = goTitle;
+  $("accuseBtn").onclick = accuse;
+  $("resumeBtn").onclick = () => { state = "search"; show(null); };
+  $("quitBtn").onclick = openCases;
+  $("solvedCases").onclick = openCases;
+  $("timeupCases").onclick = openCases;
+  $("retryBtn").onclick = () => startCase(caseIdx);
+  $("moreTimeBtn").onclick = () => Ads.rewarded(ok => {
+    if (!ok) return toast("Watch the whole ad for more time");
+    extraTimeUsed = true; timeLeft = 30; state = "search"; show(null);
+  });
+  $("nextBtn").onclick = () => {
+    const go = () => { if (caseIdx < CASES.length - 1) startCase(caseIdx + 1); else openCases(); };
+    if (save.closed >= 3 && save.closed % 3 === 0) Ads.interstitial(go); else go();
+  };
+  $("doubleBtn").onclick = () => Ads.rewarded(ok => {
+    if (!ok) return toast("Watch the whole ad to double your coins");
+    save.coins += coinsEarned; coinsEarned *= 2; persist(); updateCoins();
+    $("earned").textContent = coinsEarned; $("doubleBtn").style.display = "none"; sfx.win();
+  });
+  $("freeCoinsBtn").onclick = () => Ads.rewarded(ok => {
+    if (!ok) return toast("Watch the whole ad to get coins");
+    save.coins += 40; persist(); updateCoins(); renderShop(); toast("+40 coins!"); sfx.win();
+  });
+
+  window.onBackPressedFromApp = function () {
+    if (state === "search") { pause(); return "handled"; }
+    if (state === "title") return "exit";
+    if (state === "cases" || state === "shop") { goTitle(); return "handled"; }
+    openCases(); return "handled";
+  };
+  document.addEventListener("visibilitychange", () => {
+    persist();
+    if (document.hidden) { pause(); Voice.stop(); try { actx && actx.suspend(); } catch (e) {} }
+    else { try { actx && actx.resume(); } catch (e) {} }
+  });
+  // Audio can only start after the first tap.
+  document.addEventListener("pointerdown", () => { audio(); }, true);
+
+  // ================= BOOT =================
+  updateCoins(); soundIcon();
+  requestAnimationFrame(frame);
+  // Hooks used by automated tests and to render the app icon.
+  window.__det = () => ({ state, caseIdx, cur, found, timeLeft, selected, toScreen: (x, y) => ({ x: (ox + x * scale) / dpr, y: (oy + y * scale) / dpr }), TOP });
+  window.__drawCritter = (c, x, y, k, tt, who, o) => drawCritter(c, x, y, k, tt, who === "detective" ? detective() : CAST[who], o || {});
+  window.__drawScene = (c, i, tt) => drawScene(c, CASES[i], tt);
+  window.__drawSceneRaw = (c, cs, tt) => drawScene(c, cs, tt);
+  window.__data = () => ({ CASES, CAST, SPOTS, TRACKS, VOICES, W, SH, TOP });
+  window.__talkState = () => ({ Talk, TypeTalk });
+  window.__start = i => { if (i >= 0) startCase(i); };
+  window.__vis = visemeFor;
+  window.__audio = () => ({ track: Music.track, level: Music.level, ctx: actx && actx.state, gain: musicBus && musicBus.gain.value, step: Music.step });
+})();
+</script>
+</body>
+</html>
